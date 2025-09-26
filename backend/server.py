@@ -17,6 +17,9 @@ import shutil
 from io import BytesIO
 import pandas as pd
 import base64
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -39,6 +42,13 @@ JWT_SECRET = "spare_parts_secret_key_2024"
 # File upload directory
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Email configuration
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+NOTIFICATION_EMAIL = "office.bhoomigroup@gmail.com"
 
 # Models
 class Machine(BaseModel):
@@ -178,6 +188,56 @@ def parse_from_mongo(item):
                 item[key] = parse_from_mongo(value)
     return item
 
+async def send_order_notification(order: Order):
+    """Send email notification for new order"""
+    try:
+        if not SMTP_USERNAME or not SMTP_PASSWORD:
+            print("Email credentials not configured, skipping notification")
+            return
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USERNAME
+        msg['To'] = NOTIFICATION_EMAIL
+        msg['Subject'] = f"New Order Received - QuickParts (Order #{order.id[:8]})"
+        
+        # Email body
+        body = f"""
+        A new order has been received on QuickParts!
+        
+        Order Details:
+        Order ID: {order.id}
+        Customer: {order.customer_info.name}
+        Phone: {order.customer_info.phone}
+        Email: {order.customer_info.email or 'Not provided'}
+        Company: {order.customer_info.company or 'Not provided'}
+        
+        Items Ordered:
+        {chr(10).join([f"• {item.part_name} ({item.part_code}) - Qty: {item.quantity} - ₹{item.price * item.quantity:,}" for item in order.items])}
+        
+        Total Amount: ₹{order.total_amount:,}
+        Order Date: {order.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+        
+        Please log in to the admin dashboard to view complete order details and process the order.
+        
+        Best regards,
+        QuickParts System
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"Order notification sent successfully for order {order.id}")
+        
+    except Exception as e:
+        print(f"Failed to send order notification: {e}")
+
 # Public endpoints (Customer)
 @api_router.get("/machines", response_model=List[Machine])
 async def get_machines():
@@ -201,11 +261,21 @@ async def get_parts_by_machine(machine_id: str):
 
 @api_router.post("/orders", response_model=Order)
 async def create_order(order_data: OrderCreate):
-    order_dict = order_data.dict()
-    order_obj = Order(**order_dict)
-    order_mongo = prepare_for_mongo(order_obj.dict())
-    await db.orders.insert_one(order_mongo)
-    return order_obj
+    try:
+        order_dict = order_data.dict()
+        order_obj = Order(**order_dict)
+        order_mongo = prepare_for_mongo(order_obj.dict())
+        
+        # Insert order into database
+        result = await db.orders.insert_one(order_mongo)
+        
+        # Send email notification
+        await send_order_notification(order_obj)
+        
+        return order_obj
+    except Exception as e:
+        print(f"Error creating order: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
 
 # Admin authentication
 @api_router.post("/admin/login")
@@ -237,6 +307,16 @@ async def create_admin(admin_data: AdminCreate):
 async def get_all_orders(admin: Admin = Depends(get_current_admin)):
     orders = await db.orders.find().sort("created_at", -1).to_list(length=None)
     return [Order(**parse_from_mongo(order)) for order in orders]
+
+@api_router.get("/subcategories", response_model=List[Subcategory])
+async def get_all_subcategories(admin: Admin = Depends(get_current_admin)):
+    subcategories = await db.subcategories.find().to_list(length=None)
+    return [Subcategory(**parse_from_mongo(sub)) for sub in subcategories]
+
+@api_router.get("/parts", response_model=List[Part])
+async def get_all_parts(admin: Admin = Depends(get_current_admin)):
+    parts = await db.parts.find().to_list(length=None)
+    return [Part(**parse_from_mongo(part)) for part in parts]
 
 @api_router.post("/admin/machines", response_model=Machine)
 async def create_machine(machine_data: MachineCreate, admin: Admin = Depends(get_current_admin)):
