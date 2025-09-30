@@ -206,16 +206,19 @@ frontend:
         comment: "FIXED: Connected Edit/Delete buttons to handlers and added complete Edit Subcategory dialog with machine dropdown, name, and description fields."
 
   - task: "Part Edit/Delete functionality"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/frontend/src/App.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: false
         agent: "main"
         comment: "Edit/Delete buttons for parts exist but are not connected to handlers (lines 1956-1957). Need to wire onClick events and add edit dialog."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Connected Edit/Delete buttons to handlers and added complete Edit Part dialog with machine dropdown, category dropdown, name, code, description, and price fields."
 
   - task: "Bulk Add Parts functionality"
     implemented: true
