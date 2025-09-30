@@ -435,6 +435,15 @@ async def upload_image(file: UploadFile = File(...), admin: Admin = Depends(get_
     
     return {"image_url": f"/uploads/{filename}"}
 
+# Serve uploaded files
+@api_router.get("/uploads/{filename}")
+async def serve_uploaded_file(filename: str):
+    file_path = UPLOAD_DIR / filename
+    if file_path.exists():
+        return FileResponse(file_path)
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
 # Initialize with sample data
 @api_router.post("/admin/init-sample-data")
 async def init_sample_data():
