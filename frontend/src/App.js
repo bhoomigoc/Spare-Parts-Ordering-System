@@ -2262,19 +2262,17 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   );
 };
 
-// Bulk Add Parts Component
+// Bulk Add Parts Component with Multiple Machine Support
 const BulkAddParts = () => {
   const navigate = useNavigate();
   const [machines, setMachines] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
   const [parts, setParts] = useState([{ 
-    machine_id: '', 
-    subcategory_id: '', 
+    machine_ids: [],
     name: '', 
     code: '', 
     description: '', 
     price: '', 
-    image: null 
+    image_url: ''
   }]);
 
   useEffect(() => {
@@ -2291,13 +2289,8 @@ const BulkAddParts = () => {
       const token = localStorage.getItem('adminToken');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [machinesRes, subcategoriesRes] = await Promise.all([
-        axios.get(`${API}/machines`),
-        axios.get(`${API}/subcategories`, { headers })
-      ]);
-      
+      const machinesRes = await axios.get(`${API}/machines`);
       setMachines(machinesRes.data);
-      setSubcategories(subcategoriesRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
