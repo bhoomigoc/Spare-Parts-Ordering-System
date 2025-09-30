@@ -116,6 +116,9 @@ backend:
       - working: true
         agent: "main"
         comment: "API endpoints for create/update/delete machines are implemented with proper authentication and image handling"
+      - working: true
+        agent: "testing"
+        comment: "TESTED: All machine CRUD operations working perfectly. Create (POST /api/admin/machines), Update (PUT /api/admin/machines/{id}), Delete (DELETE /api/admin/machines/{id}) all return proper responses with authentication."
 
   - task: "Subcategory CRUD API endpoints"
     implemented: true
