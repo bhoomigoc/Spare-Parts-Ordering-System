@@ -468,6 +468,7 @@ class BackendTester:
         """Run all backend tests"""
         print("=" * 80)
         print("BACKEND API TESTING - Bhoomi Enterprises Spare Parts System")
+        print("Testing Updated Multiple Machine Support Features")
         print("=" * 80)
         
         # Test 1: Initialize sample data
@@ -493,8 +494,14 @@ class BackendTester:
         # Test 7: Subcategory CRUD
         self.test_subcategory_crud(machines)
         
-        # Test 8: Part CRUD
-        self.test_part_crud(machines, subcategories)
+        # Test 8: NEW - Part CRUD with multiple machine support
+        self.test_part_crud_multiple_machines(machines)
+        
+        # Test 9: NEW - Get parts by machine endpoint
+        self.test_parts_by_machine(machines)
+        
+        # Test 10: NEW - Backward compatibility testing
+        self.test_backward_compatibility()
         
         # Summary
         print("\n" + "=" * 80)
