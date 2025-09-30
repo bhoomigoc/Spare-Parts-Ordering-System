@@ -131,6 +131,9 @@ backend:
       - working: true
         agent: "main"
         comment: "API endpoints for create/update/delete subcategories are implemented with proper authentication"
+      - working: true
+        agent: "testing"
+        comment: "TESTED: All subcategory CRUD operations working perfectly. Create (POST /api/admin/subcategories), Update (PUT /api/admin/subcategories/{id}), Delete (DELETE /api/admin/subcategories/{id}) all return proper responses with authentication."
 
   - task: "Part CRUD API endpoints"
     implemented: true
