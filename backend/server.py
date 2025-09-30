@@ -548,27 +548,25 @@ async def init_sample_data():
         await db.subcategories.insert_one(prepare_for_mongo(subcat_obj.dict()))
         subcategory_objects.append(subcat_obj)
     
-    # Sample parts
+    # Sample parts (including some that belong to multiple machines)
     parts_data = [
-        # Tractor Engine parts
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[0].id, "name": "Piston Ring Set", "code": "TR-ENG-001", "description": "Complete piston ring set for diesel engine", "price": 2500.00},
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[0].id, "name": "Cylinder Head Gasket", "code": "TR-ENG-002", "description": "High-quality cylinder head gasket", "price": 1800.00},
+        # Tractor-specific parts
+        {"machine_ids": [machine_objects[0].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[0].id, "name": "Piston Ring Set", "code": "TR-ENG-001", "description": "Complete piston ring set for diesel engine", "price": 2500.00},
+        {"machine_ids": [machine_objects[0].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[1].id, "name": "Clutch Plate", "code": "TR-GB-001", "description": "Heavy-duty clutch plate assembly", "price": 3200.00},
+        {"machine_ids": [machine_objects[0].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[1].id, "name": "Gear Set", "code": "TR-GB-002", "description": "Complete transmission gear set", "price": 15000.00},
         
-        # Tractor Gearbox parts
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[1].id, "name": "Clutch Plate", "code": "TR-GB-001", "description": "Heavy-duty clutch plate assembly", "price": 3200.00},
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[1].id, "name": "Gear Set", "code": "TR-GB-002", "description": "Complete transmission gear set", "price": 15000.00},
+        # Harvester-specific parts
+        {"machine_ids": [machine_objects[1].id], "machine_id": machine_objects[1].id, "subcategory_id": subcategory_objects[3].id, "name": "Cutting Blade", "code": "HV-CUT-001", "description": "Sharp cutting blade for crops", "price": 1200.00},
+        {"machine_ids": [machine_objects[1].id], "machine_id": machine_objects[1].id, "subcategory_id": subcategory_objects[4].id, "name": "Threshing Drum", "code": "HV-THR-001", "description": "Heavy-duty threshing drum", "price": 8500.00},
         
-        # Tractor Filters
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[2].id, "name": "Air Filter", "code": "TR-FLT-001", "description": "High-efficiency air filter", "price": 650.00},
-        {"machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[2].id, "name": "Oil Filter", "code": "TR-FLT-002", "description": "Premium oil filter", "price": 450.00},
+        # Water Pump-specific parts
+        {"machine_ids": [machine_objects[2].id], "machine_id": machine_objects[2].id, "subcategory_id": subcategory_objects[5].id, "name": "Centrifugal Impeller", "code": "WP-IMP-001", "description": "High-efficiency centrifugal impeller", "price": 2800.00},
         
-        # Harvester parts
-        {"machine_id": machine_objects[1].id, "subcategory_id": subcategory_objects[3].id, "name": "Cutting Blade", "code": "HV-CUT-001", "description": "Sharp cutting blade for crops", "price": 1200.00},
-        {"machine_id": machine_objects[1].id, "subcategory_id": subcategory_objects[4].id, "name": "Threshing Drum", "code": "HV-THR-001", "description": "Heavy-duty threshing drum", "price": 8500.00},
-        
-        # Water Pump parts
-        {"machine_id": machine_objects[2].id, "subcategory_id": subcategory_objects[5].id, "name": "Centrifugal Impeller", "code": "WP-IMP-001", "description": "High-efficiency centrifugal impeller", "price": 2800.00},
-        {"machine_id": machine_objects[2].id, "subcategory_id": subcategory_objects[6].id, "name": "Mechanical Seal", "code": "WP-SEL-001", "description": "Water-tight mechanical seal", "price": 950.00},
+        # Universal parts (belong to multiple machines)
+        {"machine_ids": [machine_objects[0].id, machine_objects[1].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[2].id, "name": "Air Filter", "code": "UNI-FLT-001", "description": "Universal high-efficiency air filter", "price": 650.00},
+        {"machine_ids": [machine_objects[0].id, machine_objects[1].id, machine_objects[2].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[2].id, "name": "Oil Filter", "code": "UNI-FLT-002", "description": "Universal premium oil filter", "price": 450.00},
+        {"machine_ids": [machine_objects[0].id, machine_objects[2].id], "machine_id": machine_objects[0].id, "subcategory_id": subcategory_objects[6].id, "name": "Mechanical Seal", "code": "UNI-SEL-001", "description": "Universal water-tight mechanical seal", "price": 950.00},
+        {"machine_ids": [machine_objects[1].id, machine_objects[2].id], "machine_id": machine_objects[1].id, "subcategory_id": subcategory_objects[0].id, "name": "Cylinder Head Gasket", "code": "UNI-ENG-001", "description": "Universal cylinder head gasket", "price": 1800.00},
     ]
     
     for part_data in parts_data:
