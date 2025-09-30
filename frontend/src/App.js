@@ -234,7 +234,6 @@ function App() {
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/bulk-add" element={<BulkAddParts />} />
-            <Route path="/admin/bulk-edit" element={<BulkEditParts />} />
           </Routes>
           <Footer />
         </BrowserRouter>
