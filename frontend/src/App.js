@@ -2060,7 +2060,251 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Other dialogs (subcategory, part) similar pattern... */}
+      {/* Add Subcategory Dialog */}
+      <Dialog open={showAddSubcategory} onOpenChange={setShowAddSubcategory}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Machine *</Label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={newSubcategory.machine_id}
+                onChange={(e) => setNewSubcategory({...newSubcategory, machine_id: e.target.value})}
+              >
+                <option value="">Select Machine</option>
+                {machines.map(machine => (
+                  <option key={machine.id} value={machine.id}>{machine.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Category Name</Label>
+              <Input 
+                value={newSubcategory.name}
+                onChange={(e) => setNewSubcategory({...newSubcategory, name: e.target.value})}
+                placeholder="e.g., Engine"
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea 
+                value={newSubcategory.description}
+                onChange={(e) => setNewSubcategory({...newSubcategory, description: e.target.value})}
+                placeholder="Category description"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAddSubcategory(false)}>Cancel</Button>
+              <Button onClick={handleAddSubcategory}>Add Category</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Subcategory Dialog */}
+      <Dialog open={editType === 'subcategory'} onOpenChange={() => {setEditType(''); setEditingItem(null);}}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div>
+                <Label>Machine *</Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={editingItem.machine_id}
+                  onChange={(e) => setEditingItem({...editingItem, machine_id: e.target.value})}
+                >
+                  <option value="">Select Machine</option>
+                  {machines.map(machine => (
+                    <option key={machine.id} value={machine.id}>{machine.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label>Category Name</Label>
+                <Input 
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea 
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => {setEditType(''); setEditingItem(null);}}>Cancel</Button>
+                <Button onClick={handleEditSubcategory}>Update Category</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Part Dialog */}
+      <Dialog open={showAddPart} onOpenChange={setShowAddPart}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Part</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Machine *</Label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={newPart.machine_id}
+                onChange={(e) => {
+                  setNewPart({...newPart, machine_id: e.target.value, subcategory_id: ''});
+                }}
+              >
+                <option value="">Select Machine</option>
+                {machines.map(machine => (
+                  <option key={machine.id} value={machine.id}>{machine.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Category *</Label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={newPart.subcategory_id}
+                onChange={(e) => setNewPart({...newPart, subcategory_id: e.target.value})}
+                disabled={!newPart.machine_id}
+              >
+                <option value="">Select Category</option>
+                {subcategories
+                  .filter(sub => sub.machine_id === newPart.machine_id)
+                  .map(subcategory => (
+                    <option key={subcategory.id} value={subcategory.id}>{subcategory.name}</option>
+                  ))
+                }
+              </select>
+            </div>
+            <div>
+              <Label>Part Name</Label>
+              <Input 
+                value={newPart.name}
+                onChange={(e) => setNewPart({...newPart, name: e.target.value})}
+                placeholder="e.g., Piston Ring Set"
+              />
+            </div>
+            <div>
+              <Label>Part Code</Label>
+              <Input 
+                value={newPart.code}
+                onChange={(e) => setNewPart({...newPart, code: e.target.value})}
+                placeholder="e.g., TR-ENG-001"
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea 
+                value={newPart.description}
+                onChange={(e) => setNewPart({...newPart, description: e.target.value})}
+                placeholder="Part description"
+              />
+            </div>
+            <div>
+              <Label>Price (₹)</Label>
+              <Input 
+                type="number"
+                value={newPart.price}
+                onChange={(e) => setNewPart({...newPart, price: e.target.value})}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAddPart(false)}>Cancel</Button>
+              <Button onClick={handleAddPart}>Add Part</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Part Dialog */}
+      <Dialog open={editType === 'part'} onOpenChange={() => {setEditType(''); setEditingItem(null);}}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Part</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div>
+                <Label>Machine *</Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={editingItem.machine_id}
+                  onChange={(e) => {
+                    setEditingItem({...editingItem, machine_id: e.target.value, subcategory_id: ''});
+                  }}
+                >
+                  <option value="">Select Machine</option>
+                  {machines.map(machine => (
+                    <option key={machine.id} value={machine.id}>{machine.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label>Category *</Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={editingItem.subcategory_id}
+                  onChange={(e) => setEditingItem({...editingItem, subcategory_id: e.target.value})}
+                  disabled={!editingItem.machine_id}
+                >
+                  <option value="">Select Category</option>
+                  {subcategories
+                    .filter(sub => sub.machine_id === editingItem.machine_id)
+                    .map(subcategory => (
+                      <option key={subcategory.id} value={subcategory.id}>{subcategory.name}</option>
+                    ))
+                  }
+                </select>
+              </div>
+              <div>
+                <Label>Part Name</Label>
+                <Input 
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Part Code</Label>
+                <Input 
+                  value={editingItem.code}
+                  onChange={(e) => setEditingItem({...editingItem, code: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea 
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Price (₹)</Label>
+                <Input 
+                  type="number"
+                  value={editingItem.price}
+                  onChange={(e) => setEditingItem({...editingItem, price: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => {setEditType(''); setEditingItem(null);}}>Cancel</Button>
+                <Button onClick={handleEditPart}>Update Part</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
