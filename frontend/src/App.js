@@ -275,7 +275,7 @@ const CustomerCatalog = () => {
               <h3 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">Choose Your Machine Type</h3>
               <p className="text-gray-600 text-base sm:text-lg">Select a machine to browse available spare parts</p>
             </div>
-            <div className="grid md:grid-cols-3 gap-6" data-testid="machines-grid">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6" data-testid="machines-grid">
               {machines.map((machine) => (
                 <Card 
                   key={machine.id} 
