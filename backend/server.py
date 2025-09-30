@@ -406,7 +406,14 @@ async def delete_subcategory(subcategory_id: str, admin: Admin = Depends(get_cur
 
 @api_router.post("/admin/parts", response_model=Part)
 async def create_part(part_data: PartCreate, admin: Admin = Depends(get_current_admin)):
-    part_obj = Part(**part_data.dict())
+    # Create part with multiple machine support
+    part_dict = part_data.dict()
+    
+    # Set backward compatibility fields
+    part_dict["machine_id"] = part_dict["machine_ids"][0] if part_dict["machine_ids"] else ""
+    part_dict["subcategory_id"] = ""  # No longer used but keep for compatibility
+    
+    part_obj = Part(**part_dict)
     part_mongo = prepare_for_mongo(part_obj.dict())
     await db.parts.insert_one(part_mongo)
     return part_obj
