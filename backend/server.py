@@ -399,11 +399,18 @@ async def create_part(part_data: PartCreate, admin: Admin = Depends(get_current_
     await db.parts.insert_one(part_mongo)
     return part_obj
 
+class PartUpdate(BaseModel):
+    machine_id: str
+    subcategory_id: str
+    name: str
+    code: str
+    description: str
+    price: float
+    image_url: Optional[str] = None
+
 @api_router.put("/admin/parts/{part_id}", response_model=Part)
-async def update_part(part_id: str, part_data: PartCreate, admin: Admin = Depends(get_current_admin)):
+async def update_part(part_id: str, part_data: PartUpdate, admin: Admin = Depends(get_current_admin)):
     part_dict = part_data.dict()
-    part_dict["id"] = part_id
-    part_dict["created_at"] = datetime.now(timezone.utc)
     
     result = await db.parts.update_one(
         {"id": part_id}, 
