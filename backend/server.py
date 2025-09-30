@@ -430,6 +430,10 @@ class PartUpdate(BaseModel):
 async def update_part(part_id: str, part_data: PartUpdate, admin: Admin = Depends(get_current_admin)):
     part_dict = part_data.dict()
     
+    # Set backward compatibility fields
+    part_dict["machine_id"] = part_dict["machine_ids"][0] if part_dict["machine_ids"] else ""
+    part_dict["subcategory_id"] = ""  # No longer used but keep for compatibility
+    
     result = await db.parts.update_one(
         {"id": part_id}, 
         {"$set": prepare_for_mongo(part_dict)}
@@ -439,6 +443,11 @@ async def update_part(part_id: str, part_data: PartUpdate, admin: Admin = Depend
         raise HTTPException(status_code=404, detail="Part not found")
     
     updated_part = await db.parts.find_one({"id": part_id})
+    
+    # Convert legacy parts to new format for response
+    if "machine_ids" not in updated_part or not updated_part["machine_ids"]:
+        updated_part["machine_ids"] = [updated_part.get("machine_id", "")]
+    
     return Part(**parse_from_mongo(updated_part))
 
 @api_router.delete("/admin/parts/{part_id}")
