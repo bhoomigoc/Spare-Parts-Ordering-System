@@ -1399,7 +1399,6 @@ const AdminDashboard = () => {
         {activeTab === 'catalog' && (
           <CatalogTab 
             machines={machines}
-            subcategories={subcategories}
             parts={parts}
             fetchCatalogData={fetchCatalogData}
           />
