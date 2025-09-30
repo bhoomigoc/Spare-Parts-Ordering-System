@@ -256,7 +256,19 @@ async def get_parts_by_subcategory(subcategory_id: str):
 
 @api_router.get("/machines/{machine_id}/parts", response_model=List[Part])
 async def get_parts_by_machine(machine_id: str):
-    parts = await db.parts.find({"machine_id": machine_id}).to_list(length=None)
+    # Get parts that have this machine in their machine_ids array OR in legacy machine_id field
+    parts = await db.parts.find({
+        "$or": [
+            {"machine_ids": machine_id},
+            {"machine_id": machine_id}  # Backward compatibility
+        ]
+    }).to_list(length=None)
+    
+    # Convert legacy parts to new format
+    for part in parts:
+        if "machine_ids" not in part or not part["machine_ids"]:
+            part["machine_ids"] = [part.get("machine_id", "")]
+    
     return [Part(**parse_from_mongo(part)) for part in parts]
 
 @api_router.post("/orders", response_model=Order)
