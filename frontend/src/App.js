@@ -271,8 +271,9 @@ const CustomerCatalog = () => {
         {!selectedMachine && (
           <div>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Machine Type</h2>
-              <p className="text-gray-600 text-lg">Select a machine to browse available spare parts</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Spare Parts Ordering System</h2>
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">Choose Your Machine Type</h3>
+              <p className="text-gray-600 text-base sm:text-lg">Select a machine to browse available spare parts</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6" data-testid="machines-grid">
               {machines.map((machine) => (
