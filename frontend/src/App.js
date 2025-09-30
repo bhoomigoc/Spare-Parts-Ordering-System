@@ -2416,91 +2416,88 @@ const BulkAddParts = () => {
                   
                   <h4 className="font-semibold mb-4">Part #{index + 1}</h4>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <Label>Machine *</Label>
-                      <Select 
-                        value={part.machine_id} 
-                        onValueChange={(value) => {
-                          updatePart(index, 'machine_id', value);
-                          updatePart(index, 'subcategory_id', '');
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select machine" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {machines.map((machine) => (
-                            <SelectItem key={machine.id} value={machine.id}>{machine.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label>Select Machines *</Label>
+                      <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded p-2">
+                        {machines.map(machine => (
+                          <label key={machine.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={part.machine_ids.includes(machine.id)}
+                              onChange={(e) => {
+                                let newMachineIds = [...part.machine_ids];
+                                if (e.target.checked) {
+                                  newMachineIds.push(machine.id);
+                                } else {
+                                  newMachineIds = newMachineIds.filter(id => id !== machine.id);
+                                }
+                                updatePart(index, 'machine_ids', newMachineIds);
+                              }}
+                            />
+                            <span className="text-sm">{machine.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Part Name *</Label>
+                        <Input 
+                          value={part.name}
+                          onChange={(e) => updatePart(index, 'name', e.target.value)}
+                          placeholder="Enter part name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Part Code *</Label>
+                        <Input 
+                          value={part.code}
+                          onChange={(e) => updatePart(index, 'code', e.target.value)}
+                          placeholder="Enter part code"
+                        />
+                      </div>
                     </div>
                     
                     <div>
-                      <Label>Category *</Label>
-                      <Select 
-                        value={part.subcategory_id} 
-                        onValueChange={(value) => updatePart(index, 'subcategory_id', value)}
-                        disabled={!part.machine_id}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {subcategories
-                            .filter(sub => sub.machine_id === part.machine_id)
-                            .map((subcategory) => (
-                              <SelectItem key={subcategory.id} value={subcategory.id}>{subcategory.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label>Part Name *</Label>
-                      <Input 
-                        value={part.name}
-                        onChange={(e) => updatePart(index, 'name', e.target.value)}
-                        placeholder="Enter part name"
+                      <Label>Description</Label>
+                      <Textarea 
+                        value={part.description}
+                        onChange={(e) => updatePart(index, 'description', e.target.value)}
+                        placeholder="Enter part description"
                       />
                     </div>
                     
-                    <div>
-                      <Label>Part Code *</Label>
-                      <Input 
-                        value={part.code}
-                        onChange={(e) => updatePart(index, 'code', e.target.value)}
-                        placeholder="Enter part code"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Price (₹) *</Label>
-                      <Input 
-                        type="number"
-                        value={part.price}
-                        onChange={(e) => updatePart(index, 'price', e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Part Image</Label>
-                      <Input 
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files[0]) {
-                            handleImageUpload(index, e.target.files[0]);
-                          }
-                        }}
-                      />
-                      {part.image_url && (
-                        <div className="mt-2">
-                          <img src={part.image_url} alt="Part" className="h-16 w-16 object-contain border rounded" />
-                        </div>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Price (₹) *</Label>
+                        <Input 
+                          type="number"
+                          value={part.price}
+                          onChange={(e) => updatePart(index, 'price', e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label>Part Image</Label>
+                        <Input 
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files[0]) {
+                              handleImageUpload(index, e.target.files[0]);
+                            }
+                          }}
+                        />
+                        {part.image_url && (
+                          <div className="mt-2">
+                            <img src={part.image_url} alt="Preview" className="w-16 h-16 object-contain border rounded" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
