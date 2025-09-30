@@ -2298,13 +2298,12 @@ const BulkAddParts = () => {
 
   const addRow = () => {
     setParts([...parts, { 
-      machine_id: '', 
-      subcategory_id: '', 
+      machine_ids: [],
       name: '', 
       code: '', 
       description: '', 
       price: '', 
-      image: null 
+      image_url: ''
     }]);
   };
 
