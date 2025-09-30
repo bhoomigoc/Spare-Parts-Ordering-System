@@ -283,16 +283,16 @@ const CustomerCatalog = () => {
                   onClick={() => fetchSubcategories(machine.id)}
                   data-testid={`machine-card-${machine.id}`}
                 >
-                  <CardHeader>
-                    <CardTitle className="text-xl">{machine.name}</CardTitle>
-                    <CardDescription>{machine.description}</CardDescription>
+                  <CardHeader className="p-3 sm:p-6">
+                    <CardTitle className="text-base sm:text-xl text-center">{machine.name}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm text-center">{machine.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <CardContent className="p-3 sm:p-6">
+                    <div className="w-full h-20 sm:h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                       {machine.image_url ? (
                         <img src={machine.image_url} alt={machine.name} className="max-h-full max-w-full object-contain" />
                       ) : (
-                        <span className="text-gray-400 text-4xl">🔧</span>
+                        <span className="text-gray-400 text-2xl sm:text-4xl">🔧</span>
                       )}
                     </div>
                   </CardContent>
