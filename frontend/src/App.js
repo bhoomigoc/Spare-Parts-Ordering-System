@@ -1910,8 +1910,24 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
                       <p className="text-xs text-gray-500">Machine: {machine?.name}</p>
                     </div>
                     <div className="flex space-x-1">
-                      <Button size="sm" variant="ghost">Edit</Button>
-                      <Button size="sm" variant="ghost" className="text-red-600">Delete</Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingItem(subcategory);
+                          setEditType('subcategory');
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-red-600"
+                        onClick={() => handleDeleteSubcategory(subcategory.id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 </div>
