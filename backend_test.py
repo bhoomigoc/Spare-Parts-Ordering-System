@@ -360,7 +360,8 @@ class BackendTester:
         if created_part_id:
             try:
                 new_price = 2199.99
-                response = self.make_request("PUT", f"/admin/parts/{created_part_id}/price", data=new_price, auth_required=True)
+                # Price should be sent as query parameter
+                response = self.make_request("PUT", f"/admin/parts/{created_part_id}/price?price={new_price}", auth_required=True)
                 
                 if response.status_code == 200:
                     result = response.json()
