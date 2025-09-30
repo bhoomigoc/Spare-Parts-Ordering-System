@@ -1588,25 +1588,33 @@ const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF, viewOrder }) => {
   );
 };
 
-// Enhanced Catalog Tab Component with Full CRUD and Image Upload
-const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
+// Enhanced Catalog Tab Component with No Categories, Multiple Machine Support, and Inline Price Edit
+const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const [showAddMachine, setShowAddMachine] = useState(false);
-  const [showAddSubcategory, setShowAddSubcategory] = useState(false);
   const [showAddPart, setShowAddPart] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editType, setEditType] = useState('');
+  const [selectedMachineFilter, setSelectedMachineFilter] = useState('all');
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [newPrice, setNewPrice] = useState('');
   
   const [newMachine, setNewMachine] = useState({ name: '', description: '', image_url: '' });
-  const [newSubcategory, setNewSubcategory] = useState({ machine_id: '', name: '', description: '' });
   const [newPart, setNewPart] = useState({ 
-    machine_id: '', 
-    subcategory_id: '', 
+    machine_ids: [],
     name: '', 
     code: '', 
     description: '', 
     price: 0,
     image_url: ''
   });
+
+  // Filter parts based on selected machine
+  const filteredParts = selectedMachineFilter === 'all' 
+    ? parts 
+    : parts.filter(part => 
+        part.machine_ids?.includes(selectedMachineFilter) || 
+        part.machine_id === selectedMachineFilter
+      );
 
   // Image upload handler
   const handleImageUpload = async (file, type, id = null) => {
@@ -1639,6 +1647,34 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
     }
+  };
+
+  // Inline price edit handlers
+  const startPriceEdit = (part) => {
+    setEditingPrice(part.id);
+    setNewPrice(part.price.toString());
+  };
+
+  const savePriceEdit = async (partId) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.put(`${API}/admin/parts/${partId}/price?price=${parseFloat(newPrice)}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEditingPrice(null);
+      setNewPrice('');
+      fetchCatalogData();
+      toast.success('Price updated successfully!');
+    } catch (error) {
+      console.error('Error updating price:', error);
+      toast.error('Failed to update price');
+    }
+  };
+
+  const cancelPriceEdit = () => {
+    setEditingPrice(null);
+    setNewPrice('');
   };
 
   const handleAddMachine = async () => {
@@ -1680,7 +1716,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
   };
 
   const handleDeleteMachine = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this machine? This will also delete all related categories and parts.')) {
+    if (!window.confirm('Are you sure you want to delete this machine? This will also delete all related parts.')) {
       return;
     }
     
@@ -1698,63 +1734,6 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     }
   };
 
-  const handleAddSubcategory = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/admin/subcategories`, newSubcategory, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setNewSubcategory({ machine_id: '', name: '', description: '' });
-      setShowAddSubcategory(false);
-      fetchCatalogData();
-      toast.success('Category added successfully!');
-    } catch (error) {
-      console.error('Error adding subcategory:', error);
-      toast.error('Failed to add category');
-    }
-  };
-
-  const handleEditSubcategory = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/subcategories/${editingItem.id}`, {
-        machine_id: editingItem.machine_id,
-        name: editingItem.name,
-        description: editingItem.description
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setEditingItem(null);
-      setEditType('');
-      fetchCatalogData();
-      toast.success('Category updated successfully!');
-    } catch (error) {
-      console.error('Error updating category:', error);
-      toast.error('Failed to update category');
-    }
-  };
-
-  const handleDeleteSubcategory = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this category? This will also delete all related parts.')) {
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem('adminToken');
-      await axios.delete(`${API}/admin/subcategories/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      fetchCatalogData();
-      toast.success('Category deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast.error('Failed to delete category');
-    }
-  };
-
   const handleAddPart = async () => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -1766,8 +1745,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
       });
       
       setNewPart({ 
-        machine_id: '', 
-        subcategory_id: '', 
+        machine_ids: [],
         name: '', 
         code: '', 
         description: '', 
@@ -1787,8 +1765,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     try {
       const token = localStorage.getItem('adminToken');
       await axios.put(`${API}/admin/parts/${editingItem.id}`, {
-        machine_id: editingItem.machine_id,
-        subcategory_id: editingItem.subcategory_id,
+        machine_ids: editingItem.machine_ids,
         name: editingItem.name,
         code: editingItem.code,
         description: editingItem.description,
@@ -1827,6 +1804,14 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     }
   };
 
+  const getMachineNames = (machineIds) => {
+    if (!machineIds || machineIds.length === 0) return 'No machines assigned';
+    return machineIds.map(id => {
+      const machine = machines.find(m => m.id === id);
+      return machine ? machine.name : 'Unknown';
+    }).join(', ');
+  };
+
   return (
     <div data-testid="catalog-section">
       <div className="flex justify-between items-center mb-6">
@@ -1835,16 +1820,13 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
           <Button onClick={() => setShowAddMachine(true)} data-testid="add-machine-btn">
             Add Machine
           </Button>
-          <Button onClick={() => setShowAddSubcategory(true)} variant="outline" data-testid="add-subcategory-btn">
-            Add Category
-          </Button>
           <Button onClick={() => setShowAddPart(true)} variant="outline" data-testid="add-part-btn">
             Add Part
           </Button>
         </div>
       </div>
 
-      {/* Machines with CRUD operations and images */}
+      {/* Machines Section */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Machines ({machines.length})</CardTitle>
@@ -1864,6 +1846,9 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
                   <div className="flex-grow">
                     <h4 className="font-semibold">{machine.name}</h4>
                     <p className="text-sm text-gray-600">{machine.description}</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      {parts.filter(part => part.machine_ids?.includes(machine.id) || part.machine_id === machine.id).length} parts
+                    </p>
                   </div>
                   <div className="flex space-x-1">
                     <Button 
@@ -1892,108 +1877,105 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </CardContent>
       </Card>
 
-      {/* Subcategories with CRUD operations */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Categories ({subcategories.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subcategories.map((subcategory) => {
-              const machine = machines.find(m => m.id === subcategory.machine_id);
-              return (
-                <div key={subcategory.id} className="border rounded p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-grow">
-                      <h4 className="font-semibold">{subcategory.name}</h4>
-                      <p className="text-sm text-gray-600">{subcategory.description}</p>
-                      <p className="text-xs text-gray-500">Machine: {machine?.name}</p>
-                    </div>
-                    <div className="flex space-x-1">
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingItem(subcategory);
-                          setEditType('subcategory');
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="text-red-600"
-                        onClick={() => handleDeleteSubcategory(subcategory.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Parts with CRUD operations */}
+      {/* Parts Section with Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Parts ({parts.length})</CardTitle>
+          <CardTitle className="flex justify-between items-center">
+            <span>Parts ({filteredParts.length})</span>
+            <div className="flex items-center space-x-2">
+              <Label>Filter by Machine:</Label>
+              <select 
+                className="border rounded px-3 py-1"
+                value={selectedMachineFilter}
+                onChange={(e) => setSelectedMachineFilter(e.target.value)}
+              >
+                <option value="all">All Machines</option>
+                {machines.map(machine => (
+                  <option key={machine.id} value={machine.id}>{machine.name}</option>
+                ))}
+              </select>
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
-            {parts.map((part) => {
-              const machine = machines.find(m => m.id === part.machine_id);
-              const subcategory = subcategories.find(s => s.id === part.subcategory_id);
-              return (
-                <div key={part.id} className="border rounded p-4">
-                  <div className="flex space-x-4">
-                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                      {part.image_url ? (
-                        <img src={part.image_url} alt={part.name} className="max-h-full max-w-full object-contain" />
-                      ) : (
-                        <span className="text-gray-400 text-xl">🔩</span>
-                      )}
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">{part.name}</h4>
-                          <p className="text-sm text-gray-600">Code: {part.code}</p>
-                          <p className="text-sm text-gray-600">{part.description}</p>
-                          <p className="text-sm font-semibold text-green-600">₹{part.price.toLocaleString()}</p>
-                          <p className="text-xs text-gray-500">
-                            {machine?.name} → {subcategory?.name}
-                          </p>
+            {filteredParts.map((part) => (
+              <div key={part.id} className="border rounded p-4">
+                <div className="flex space-x-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                    {part.image_url ? (
+                      <img src={part.image_url} alt={part.name} className="max-h-full max-w-full object-contain" />
+                    ) : (
+                      <span className="text-gray-400 text-xl">🔩</span>
+                    )}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold">{part.name}</h4>
+                        <p className="text-sm text-gray-600">Code: {part.code}</p>
+                        <p className="text-sm text-gray-600">{part.description}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          {editingPrice === part.id ? (
+                            <div className="flex items-center space-x-1">
+                              <span className="text-sm">₹</span>
+                              <input
+                                type="number"
+                                value={newPrice}
+                                onChange={(e) => setNewPrice(e.target.value)}
+                                className="w-20 px-1 py-0 text-sm border rounded"
+                                step="0.01"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') savePriceEdit(part.id);
+                                  if (e.key === 'Escape') cancelPriceEdit();
+                                }}
+                                autoFocus
+                              />
+                              <Button size="sm" variant="ghost" onClick={() => savePriceEdit(part.id)}>✓</Button>
+                              <Button size="sm" variant="ghost" onClick={cancelPriceEdit}>✕</Button>
+                            </div>
+                          ) : (
+                            <p 
+                              className="text-sm font-semibold text-green-600 cursor-pointer hover:bg-green-50 px-1 rounded"
+                              onClick={() => startPriceEdit(part)}
+                              title="Click to edit price"
+                            >
+                              ₹{part.price?.toLocaleString()}
+                            </p>
+                          )}
                         </div>
-                        <div className="flex space-x-1">
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => {
-                              setEditingItem(part);
-                              setEditType('part');
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="text-red-600"
-                            onClick={() => handleDeletePart(part.id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Machines: {getMachineNames(part.machine_ids || [part.machine_id])}
+                        </p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingItem({
+                              ...part, 
+                              machine_ids: part.machine_ids || [part.machine_id]
+                            });
+                            setEditType('part');
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-red-600"
+                          onClick={() => handleDeletePart(part.id)}
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
