@@ -400,8 +400,7 @@ async def create_part(part_data: PartCreate, admin: Admin = Depends(get_current_
     return part_obj
 
 class PartUpdate(BaseModel):
-    machine_id: str
-    subcategory_id: str
+    machine_ids: List[str]  # Changed to support multiple machines
     name: str
     code: str
     description: str
