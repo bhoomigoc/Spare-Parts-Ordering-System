@@ -328,6 +328,12 @@ async def get_all_subcategories(admin: Admin = Depends(get_current_admin)):
 @api_router.get("/parts", response_model=List[Part])
 async def get_all_parts(admin: Admin = Depends(get_current_admin)):
     parts = await db.parts.find().to_list(length=None)
+    
+    # Convert legacy parts to new format
+    for part in parts:
+        if "machine_ids" not in part or not part["machine_ids"]:
+            part["machine_ids"] = [part.get("machine_id", "")]
+    
     return [Part(**parse_from_mongo(part)) for part in parts]
 
 @api_router.post("/admin/machines", response_model=Machine)
