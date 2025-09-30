@@ -191,16 +191,19 @@ frontend:
         comment: "Machine edit/delete buttons are properly connected to handlers (lines 1869-1886)"
 
   - task: "Subcategory Edit/Delete functionality"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/frontend/src/App.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: false
         agent: "main"
         comment: "Edit/Delete buttons for subcategories exist but are not connected to handlers (lines 1913-1914). Need to wire onClick events and add edit dialog."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Connected Edit/Delete buttons to handlers and added complete Edit Subcategory dialog with machine dropdown, name, and description fields."
 
   - task: "Part Edit/Delete functionality"
     implemented: false
