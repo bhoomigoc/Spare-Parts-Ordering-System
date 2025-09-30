@@ -313,7 +313,7 @@ const CustomerCatalog = () => {
                 ← Back to Machines
               </Button>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="subcategories-grid">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="subcategories-grid">
               {subcategories.map((subcategory) => (
                 <Card 
                   key={subcategory.id} 
