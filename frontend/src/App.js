@@ -1588,7 +1588,7 @@ const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF, viewOrder }) => {
   );
 };
 
-// Enhanced Catalog Tab Component with Full CRUD
+// Enhanced Catalog Tab Component with Full CRUD and Image Upload
 const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
   const [showAddMachine, setShowAddMachine] = useState(false);
   const [showAddSubcategory, setShowAddSubcategory] = useState(false);
