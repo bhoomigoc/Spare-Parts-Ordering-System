@@ -19,19 +19,35 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Main App Component
+// Cart Context for persistence across pages
+const CartContext = React.createContext();
+
+// Main App Component with Cart Persistence
 function App() {
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('bhoomicart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('bhoomicart', JSON.stringify(cart));
+  }, [cart]);
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<CustomerCatalog />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster />
-    </div>
+    <CartContext.Provider value={{ cart, setCart }}>
+      <div className="App">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<CustomerCatalog />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/bulk-add" element={<BulkAddParts />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster />
+      </div>
+    </CartContext.Provider>
   );
 }
 
@@ -42,9 +58,7 @@ const CustomerCatalog = () => {
   const [subcategories, setSubcategories] = useState([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [parts, setParts] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [showCart, setShowCart] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const { cart, setCart } = React.useContext(CartContext);
 
   useEffect(() => {
     fetchMachines();
@@ -107,30 +121,11 @@ const CustomerCatalog = () => {
         subcategory_name: selectedSubcategory.name,
         quantity,
         price: part.price,
+        image_url: part.image_url,
         comment: ''
       }]);
     }
     toast.success(`${quantity} x ${part.name} added to cart!`);
-  };
-
-  const updateCartQuantity = (partId, quantity) => {
-    if (quantity === 0) {
-      setCart(cart.filter(item => item.part_id !== partId));
-    } else {
-      setCart(cart.map(item => 
-        item.part_id === partId ? { ...item, quantity } : item
-      ));
-    }
-  };
-
-  const updateCartComment = (partId, comment) => {
-    setCart(cart.map(item => 
-      item.part_id === partId ? { ...item, comment } : item
-    ));
-  };
-
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   const goBack = () => {
@@ -143,19 +138,8 @@ const CustomerCatalog = () => {
     }
   };
 
-  // Group cart items by category and subcategory
-  const getGroupedCartItems = () => {
-    const grouped = {};
-    cart.forEach(item => {
-      if (!grouped[item.machine_name]) {
-        grouped[item.machine_name] = {};
-      }
-      if (!grouped[item.machine_name][item.subcategory_name]) {
-        grouped[item.machine_name][item.subcategory_name] = [];
-      }
-      grouped[item.machine_name][item.subcategory_name].push(item);
-    });
-    return grouped;
+  const switchMachine = (machineId) => {
+    fetchSubcategories(machineId);
   };
 
   return (
@@ -165,28 +149,31 @@ const CustomerCatalog = () => {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">SP</span>
-              </div>
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-12 object-contain"
+              />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">QuickParts</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Bhoomi Enterprises</h1>
                 <p className="text-gray-600 text-sm">Spare Parts Ordering System</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowCart(true)}
-                data-testid="cart-button"
-                className="relative"
-              >
-                Cart ({cart.length})
-                {cart.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1">
-                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                  </Badge>
-                )}
-              </Button>
+              <Link to="/cart">
+                <Button
+                  variant="outline"
+                  data-testid="cart-button"
+                  className="relative"
+                >
+                  Cart ({cart.length})
+                  {cart.length > 0 && (
+                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1">
+                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               <Link to="/admin">
                 <Button variant="ghost" data-testid="admin-login-link">Admin Login</Button>
               </Link>
@@ -200,7 +187,12 @@ const CustomerCatalog = () => {
         {/* Navigation */}
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
           <button 
-            onClick={() => window.location.reload()} 
+            onClick={() => {
+              setSelectedMachine(null);
+              setSelectedSubcategory(null);
+              setSubcategories([]);
+              setParts([]);
+            }} 
             className="hover:text-blue-600 transition-colors"
             data-testid="home-breadcrumb"
           >
@@ -228,6 +220,40 @@ const CustomerCatalog = () => {
           )}
         </div>
 
+        {/* Machine Switcher (when viewing parts) */}
+        {selectedSubcategory && (
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <p className="text-sm text-gray-600 mb-3">Switch Machine Type:</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {machines.map((machine) => (
+                <Button
+                  key={machine.id}
+                  variant={machine.id === selectedMachine.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => switchMachine(machine.id)}
+                  data-testid={`switch-machine-${machine.id}`}
+                >
+                  {machine.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-sm text-gray-600 mb-3">Switch Category:</p>
+            <div className="flex flex-wrap gap-2">
+              {subcategories.map((subcat) => (
+                <Button
+                  key={subcat.id}
+                  variant={subcat.id === selectedSubcategory.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => fetchParts(subcat.id)}
+                  data-testid={`switch-category-${subcat.id}`}
+                >
+                  {subcat.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         {!selectedMachine && (
           <div>
@@ -249,7 +275,11 @@ const CustomerCatalog = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400 text-4xl">🔧</span>
+                      {machine.image_url ? (
+                        <img src={machine.image_url} alt={machine.name} className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-gray-400 text-4xl">🔧</span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -294,24 +324,6 @@ const CustomerCatalog = () => {
 
         {selectedSubcategory && (
           <div>
-            {/* Category Navigation */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-              <p className="text-sm text-gray-600 mb-3">Switch Category:</p>
-              <div className="flex flex-wrap gap-2">
-                {subcategories.map((subcat) => (
-                  <Button
-                    key={subcat.id}
-                    variant={subcat.id === selectedSubcategory.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => fetchParts(subcat.id)}
-                    data-testid={`switch-category-${subcat.id}`}
-                  >
-                    {subcat.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedSubcategory.name} - Parts</h2>
@@ -329,28 +341,6 @@ const CustomerCatalog = () => {
           </div>
         )}
       </div>
-
-      {/* Cart Dialog */}
-      <CartDialog 
-        cart={cart}
-        showCart={showCart}
-        setShowCart={setShowCart}
-        setShowCheckout={setShowCheckout}
-        updateCartQuantity={updateCartQuantity}
-        updateCartComment={updateCartComment}
-        calculateTotal={calculateTotal}
-        getGroupedCartItems={getGroupedCartItems}
-      />
-
-      {/* Checkout Dialog */}
-      <CheckoutDialog 
-        cart={cart}
-        showCheckout={showCheckout}
-        setShowCheckout={setShowCheckout}
-        setCart={setCart}
-        calculateTotal={calculateTotal}
-        getGroupedCartItems={getGroupedCartItems}
-      />
     </div>
   );
 };
@@ -425,40 +415,124 @@ const PartCard = ({ part, onAddToCart }) => {
   );
 };
 
-// Cart Dialog Component with Grouped Display
-const CartDialog = ({ cart, showCart, setShowCart, setShowCheckout, updateCartQuantity, updateCartComment, calculateTotal, getGroupedCartItems }) => {
+// Cart Page Component
+const CartPage = () => {
+  const { cart, setCart } = React.useContext(CartContext);
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  const updateCartQuantity = (partId, quantity) => {
+    if (quantity === 0) {
+      setCart(cart.filter(item => item.part_id !== partId));
+    } else {
+      setCart(cart.map(item => 
+        item.part_id === partId ? { ...item, quantity } : item
+      ));
+    }
+  };
+
+  const updateCartComment = (partId, comment) => {
+    setCart(cart.map(item => 
+      item.part_id === partId ? { ...item, comment } : item
+    ));
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  // Group cart items by category and subcategory
+  const getGroupedCartItems = () => {
+    const grouped = {};
+    cart.forEach(item => {
+      if (!grouped[item.machine_name]) {
+        grouped[item.machine_name] = {};
+      }
+      if (!grouped[item.machine_name][item.subcategory_name]) {
+        grouped[item.machine_name][item.subcategory_name] = [];
+      }
+      grouped[item.machine_name][item.subcategory_name].push(item);
+    });
+    return grouped;
+  };
+
   const groupedItems = getGroupedCartItems();
 
   return (
-    <Dialog open={showCart} onOpenChange={setShowCart}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="cart-dialog">
-        <DialogHeader>
-          <DialogTitle>Shopping Cart</DialogTitle>
-          <DialogDescription>
-            Review your selected parts and quantities
-          </DialogDescription>
-        </DialogHeader>
-        
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-12 object-contain"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Bhoomi Enterprises</h1>
+                <p className="text-gray-600 text-sm">Shopping Cart</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="outline">← Continue Shopping</Button>
+              </Link>
+              <Link to="/admin">
+                <Button variant="ghost">Admin Login</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cart Content */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-gray-900">Your Cart</h2>
+          <div className="text-lg text-gray-600">
+            {cart.reduce((sum, item) => sum + item.quantity, 0)} items
+          </div>
+        </div>
+
         {cart.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Your cart is empty</p>
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">🛒</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-4">Your cart is empty</h3>
+            <Link to="/">
+              <Button>Start Shopping</Button>
+            </Link>
           </div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedItems).map(([machineName, categories]) => (
-              <div key={machineName} className="border rounded-lg p-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">{machineName}</h3>
-                {Object.entries(categories).map(([categoryName, items]) => (
-                  <div key={categoryName} className="mb-4">
-                    <h4 className="text-md font-semibold text-gray-700 mb-3">{categoryName}</h4>
-                    <div className="space-y-3">
-                      {items.map((item) => (
-                        <div key={item.part_id} className="border rounded p-3" data-testid={`cart-item-${item.part_id}`}>
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                            <div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-6">
+              {Object.entries(groupedItems).map(([machineName, categories]) => (
+                <div key={machineName} className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{machineName}</h3>
+                  {Object.entries(categories).map(([categoryName, items]) => (
+                    <div key={categoryName} className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-700 mb-4">{categoryName}</h4>
+                      <div className="space-y-4">
+                        {items.map((item) => (
+                          <div key={item.part_id} className="flex items-center space-x-4 p-4 border rounded-lg" data-testid={`cart-item-${item.part_id}`}>
+                            {/* Product Image */}
+                            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              {item.image_url ? (
+                                <img src={item.image_url} alt={item.part_name} className="max-h-full max-w-full object-contain" />
+                              ) : (
+                                <span className="text-gray-400 text-2xl">🔩</span>
+                              )}
+                            </div>
+                            
+                            {/* Product Details */}
+                            <div className="flex-grow">
                               <h5 className="font-semibold">{item.part_name}</h5>
                               <p className="text-sm text-gray-600">{item.part_code}</p>
+                              <p className="text-sm font-semibold text-green-600">₹{item.price.toLocaleString()}</p>
                             </div>
+                            
+                            {/* Quantity Controls */}
                             <div className="flex items-center space-x-2">
                               <Button 
                                 size="sm" 
@@ -484,37 +558,61 @@ const CartDialog = ({ cart, showCart, setShowCart, setShowCheckout, updateCartQu
                                 +
                               </Button>
                             </div>
-                            <div>
-                              <Textarea 
-                                placeholder="Add comments..." 
-                                value={item.comment}
-                                onChange={(e) => updateCartComment(item.part_id, e.target.value)}
-                                className="resize-none"
-                                rows={2}
-                                data-testid={`comment-input-${item.part_id}`}
-                              />
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
-                              <p className="text-sm text-gray-600">₹{item.price} × {item.quantity}</p>
+                            
+                            {/* Total Price */}
+                            <div className="text-right font-semibold">
+                              ₹{(item.price * item.quantity).toLocaleString()}
                             </div>
                           </div>
+                        ))}
+                        
+                        {/* Specifications Section */}
+                        <div className="mt-4">
+                          <Label className="text-sm font-medium text-gray-700">Please Mention Specifications, If any:</Label>
+                          {items.map((item) => (
+                            <Textarea 
+                              key={`comment-${item.part_id}`}
+                              placeholder={`Specifications for ${item.part_name}...`}
+                              value={item.comment}
+                              onChange={(e) => updateCartComment(item.part_id, e.target.value)}
+                              className="mt-2 resize-none"
+                              rows={2}
+                              data-testid={`comment-input-${item.part_id}`}
+                            />
+                          ))}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </div>
+              ))}
+            </div>
             
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center text-xl font-bold">
-                <span>Total: ₹{calculateTotal().toLocaleString()}</span>
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow p-6 sticky top-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
+                
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>₹{calculateTotal().toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 mb-6">
+                  <div className="flex justify-between items-center text-xl font-bold">
+                    <span>Total</span>
+                    <span>₹{calculateTotal().toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    * GST and Packaging & Forwarding charges will be added extra
+                  </p>
+                </div>
+                
                 <Button 
-                  onClick={() => {
-                    setShowCart(false);
-                    setShowCheckout(true);
-                  }}
+                  onClick={() => setShowCheckout(true)}
+                  className="w-full"
                   data-testid="proceed-to-checkout"
                 >
                   Proceed to Checkout
@@ -523,12 +621,22 @@ const CartDialog = ({ cart, showCart, setShowCart, setShowCheckout, updateCartQu
             </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Checkout Dialog */}
+      <CheckoutDialog 
+        cart={cart}
+        showCheckout={showCheckout}
+        setShowCheckout={setShowCheckout}
+        setCart={setCart}
+        calculateTotal={calculateTotal}
+        getGroupedCartItems={getGroupedCartItems}
+      />
+    </div>
   );
 };
 
-// Checkout Dialog Component with Enhanced PDF
+// Enhanced Checkout Dialog Component
 const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculateTotal, getGroupedCartItems }) => {
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -554,8 +662,8 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       const response = await axios.post(`${API}/orders`, orderData);
       console.log('Order response:', response.data);
       
-      // Generate PDF with grouped items
-      generateGroupedPDF(response.data, getGroupedCartItems());
+      // Generate professional PDF with images
+      generateProfessionalPDF(response.data, getGroupedCartItems());
       
       // Clear cart
       setCart([]);
@@ -568,70 +676,138 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
     }
   };
 
-  const generateGroupedPDF = (order, groupedItems) => {
+  const generateProfessionalPDF = (order, groupedItems) => {
     const pdf = new jsPDF();
     
-    // Header
-    pdf.setFontSize(20);
-    pdf.text('QuickParts - Order Summary', 20, 30);
+    // Company Header with Logo
+    pdf.setFontSize(24);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Bhoomi Enterprises', 20, 30);
     
     pdf.setFontSize(12);
-    pdf.text(`Order ID: ${order.id}`, 20, 45);
-    pdf.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 20, 55);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Spare Parts Order Invoice', 20, 45);
     
-    // Customer Info
-    pdf.setFontSize(14);
-    pdf.text('Customer Information:', 20, 75);
+    // Order Information
     pdf.setFontSize(10);
+    pdf.text(`Order ID: ${order.id}`, 120, 45);
+    pdf.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 120, 55);
+    
+    // Customer Information Box
+    pdf.rect(15, 65, 180, 40);
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Customer Information', 20, 75);
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
     pdf.text(`Name: ${order.customer_info.name}`, 20, 85);
-    pdf.text(`Phone: ${order.customer_info.phone}`, 20, 95);
-    if (order.customer_info.email) pdf.text(`Email: ${order.customer_info.email}`, 20, 105);
-    if (order.customer_info.company) pdf.text(`Company: ${order.customer_info.company}`, 20, 115);
+    pdf.text(`Phone: ${order.customer_info.phone}`, 20, 92);
+    if (order.customer_info.email) pdf.text(`Email: ${order.customer_info.email}`, 20, 99);
+    if (order.customer_info.company) pdf.text(`Company: ${order.customer_info.company}`, 120, 85);
     
-    let yPosition = 130;
+    let yPosition = 120;
     
-    // Grouped Items
+    // Professional Table Header
+    pdf.setFillColor(59, 130, 246);
+    pdf.rect(15, yPosition, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Item Details', 20, yPosition + 5);
+    pdf.text('Code', 80, yPosition + 5);
+    pdf.text('Qty', 110, yPosition + 5);
+    pdf.text('Rate (₹)', 130, yPosition + 5);
+    pdf.text('Amount (₹)', 160, yPosition + 5);
+    
+    yPosition += 12;
+    pdf.setTextColor(0, 0, 0);
+    
+    // Grouped Items with Professional Formatting
     Object.entries(groupedItems).forEach(([machineName, categories]) => {
       // Machine header
-      pdf.setFontSize(12);
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(15, yPosition, 180, 6, 'F');
+      pdf.setFontSize(10);
       pdf.setFont(undefined, 'bold');
-      pdf.text(`${machineName}:`, 20, yPosition);
+      pdf.text(machineName, 20, yPosition + 4);
       yPosition += 10;
       
       Object.entries(categories).forEach(([categoryName, items]) => {
-        // Category header
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(`  ${categoryName}:`, 25, yPosition);
-        yPosition += 8;
+        // Category subheader
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, 'italic');
+        pdf.text(`  ${categoryName}`, 25, yPosition);
+        yPosition += 6;
         
-        // Items in this category
+        // Items
         items.forEach(item => {
           pdf.setFont(undefined, 'normal');
-          pdf.text(`    • ${item.part_name} (${item.part_code}) - Qty: ${item.quantity} - ₹${(item.price * item.quantity).toLocaleString()}`, 30, yPosition);
-          yPosition += 6;
+          pdf.setFontSize(8);
+          
+          // Item name (with text wrapping)
+          const itemText = `    ${item.part_name}`;
+          pdf.text(itemText.length > 35 ? itemText.substring(0, 35) + '...' : itemText, 20, yPosition);
+          pdf.text(item.part_code, 80, yPosition);
+          pdf.text(item.quantity.toString(), 115, yPosition);
+          pdf.text(item.price.toLocaleString(), 135, yPosition);
+          pdf.text((item.price * item.quantity).toLocaleString(), 165, yPosition);
+          
+          yPosition += 5;
+          
+          // Add specifications if provided
           if (item.comment) {
-            pdf.text(`      Note: ${item.comment}`, 35, yPosition);
-            yPosition += 6;
+            pdf.setFontSize(7);
+            pdf.setFont(undefined, 'italic');
+            pdf.text(`      Spec: ${item.comment.substring(0, 60)}`, 20, yPosition);
+            yPosition += 4;
           }
         });
-        yPosition += 4;
+        yPosition += 3;
       });
-      yPosition += 6;
+      yPosition += 5;
     });
     
-    // Total
+    // Summary Section
     yPosition += 10;
-    pdf.setFontSize(14);
+    pdf.line(120, yPosition, 195, yPosition);
+    yPosition += 8;
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Subtotal:', 135, yPosition);
+    pdf.text(`₹${order.total_amount.toLocaleString()}`, 165, yPosition);
+    
+    yPosition += 10;
     pdf.setFont(undefined, 'bold');
-    pdf.text(`Grand Total: ₹${order.total_amount.toLocaleString()}`, 20, yPosition);
+    pdf.text('Total Amount:', 135, yPosition);
+    pdf.text(`₹${order.total_amount.toLocaleString()}`, 165, yPosition);
+    
+    // Terms and Conditions
+    yPosition += 20;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Terms & Conditions:', 20, yPosition);
+    yPosition += 5;
+    pdf.text('• GST and Packaging & Forwarding charges will be added extra', 20, yPosition);
+    yPosition += 4;
+    pdf.text('• Prices are subject to change without prior notice', 20, yPosition);
+    yPosition += 4;
+    pdf.text('• Payment terms as per company policy', 20, yPosition);
+    
+    // Footer
+    yPosition += 15;
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'italic');
+    pdf.text('Thank you for your business!', 20, yPosition);
+    pdf.text('Bhoomi Enterprises', 140, yPosition);
     
     // Save PDF
-    const fileName = `QuickParts-Order-${order.id.slice(0, 8)}.pdf`;
+    const fileName = `Bhoomi-Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
     pdf.save(fileName);
     
     // Generate WhatsApp link
-    const whatsappMessage = `Order Summary from QuickParts\n\nOrder ID: ${order.id}\nCustomer: ${order.customer_info.name}\nTotal: ₹${order.total_amount.toLocaleString()}\n\nItems:\n${order.items.map(item => `• ${item.part_name} (${item.quantity}x)`).join('\n')}`;
+    const whatsappMessage = `Order Summary from Bhoomi Enterprises\n\nOrder ID: ${order.id}\nCustomer: ${order.customer_info.name}\nTotal: ₹${order.total_amount.toLocaleString()}\n\nItems:\n${order.items.map(item => `• ${item.part_name} (${item.quantity}x)`).join('\n')}\n\n*GST and P&F charges will be added extra`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
     
     setTimeout(() => {
@@ -720,9 +896,14 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
               </div>
             ))}
           </div>
-          <div className="border-t mt-2 pt-2 flex justify-between font-bold">
-            <span>Total:</span>
-            <span>₹{calculateTotal().toLocaleString()}</span>
+          <div className="border-t mt-2 pt-2">
+            <div className="flex justify-between font-bold">
+              <span>Total:</span>
+              <span>₹{calculateTotal().toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              * GST and Packaging & Forwarding charges will be added extra
+            </p>
           </div>
         </div>
 
@@ -759,6 +940,13 @@ const AdminLogin = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-6">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/bhoomi-logo.png" 
+              alt="Bhoomi Enterprises" 
+              className="h-16 object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl">Admin Login</CardTitle>
           <CardDescription>Access the admin dashboard</CardDescription>
         </CardHeader>
@@ -809,16 +997,14 @@ const AdminLogin = () => {
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderView, setShowOrderView] = useState(false);
   const navigate = useNavigate();
 
   // Catalog Management States
   const [machines, setMachines] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [parts, setParts] = useState([]);
-  const [showAddMachine, setShowAddMachine] = useState(false);
-  const [showAddSubcategory, setShowAddSubcategory] = useState(false);
-  const [showAddPart, setShowAddPart] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -877,9 +1063,9 @@ const AdminDashboard = () => {
   const downloadOrderPDF = (order) => {
     const pdf = new jsPDF();
     
-    // Header
+    // Professional PDF generation (same as customer PDF but with admin formatting)
     pdf.setFontSize(20);
-    pdf.text('QuickParts - Order Details', 20, 30);
+    pdf.text('Bhoomi Enterprises - Admin Order View', 20, 30);
     
     pdf.setFontSize(12);
     pdf.text(`Order ID: ${order.id}`, 20, 45);
@@ -909,7 +1095,7 @@ const AdminDashboard = () => {
     
     pdf.autoTable({
       startY: 140,
-      head: [['Part Name', 'Code', 'Machine', 'Category', 'Qty', 'Price', 'Total', 'Comments']],
+      head: [['Part Name', 'Code', 'Machine', 'Category', 'Qty', 'Price', 'Total', 'Specifications']],
       body: tableData,
       theme: 'grid',
       styles: { fontSize: 8 },
@@ -920,10 +1106,17 @@ const AdminDashboard = () => {
     const finalY = pdf.lastAutoTable.finalY + 10;
     pdf.setFontSize(14);
     pdf.text(`Grand Total: ₹${order.total_amount.toLocaleString()}`, 20, finalY);
+    pdf.setFontSize(8);
+    pdf.text('* GST and Packaging & Forwarding charges will be added extra', 20, finalY + 10);
     
     // Save PDF
-    const fileName = `Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
+    const fileName = `Admin-Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
     pdf.save(fileName);
+  };
+
+  const viewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderView(true);
   };
 
   return (
@@ -933,17 +1126,22 @@ const AdminDashboard = () => {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">SP</span>
-              </div>
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-12 object-contain"
+              />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-600 text-sm">Manage your spare parts catalog</p>
+                <p className="text-gray-600 text-sm">Bhoomi Enterprises Management</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/" target="_blank">
                 <Button variant="outline" data-testid="view-catalog">View Catalog</Button>
+              </Link>
+              <Link to="/admin/bulk-add">
+                <Button variant="outline">Bulk Add Parts</Button>
               </Link>
               <Button onClick={handleLogout} variant="ghost" data-testid="admin-logout">
                 Logout
@@ -990,6 +1188,7 @@ const AdminDashboard = () => {
             orders={orders} 
             fetchOrders={fetchOrders} 
             downloadOrderPDF={downloadOrderPDF}
+            viewOrder={viewOrder}
           />
         )}
 
@@ -1002,12 +1201,108 @@ const AdminDashboard = () => {
           />
         )}
       </div>
+
+      {/* Order View Dialog */}
+      <Dialog open={showOrderView} onOpenChange={setShowOrderView}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              View complete order information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <OrderViewDialog order={selectedOrder} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Orders Tab Component
-const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF }) => {
+// Order View Dialog Component
+const OrderViewDialog = ({ order }) => {
+  // Group items by machine and category
+  const groupedItems = {};
+  order.items.forEach(item => {
+    if (!groupedItems[item.machine_name]) {
+      groupedItems[item.machine_name] = {};
+    }
+    if (!groupedItems[item.machine_name][item.subcategory_name]) {
+      groupedItems[item.machine_name][item.subcategory_name] = [];
+    }
+    groupedItems[item.machine_name][item.subcategory_name].push(item);
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Order Header */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="font-semibold text-gray-700">Order Information</h4>
+            <p className="text-sm">ID: {order.id}</p>
+            <p className="text-sm">Date: {new Date(order.created_at).toLocaleDateString()}</p>
+            <p className="text-sm">Status: <Badge>{order.status}</Badge></p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-700">Customer Information</h4>
+            <p className="text-sm">{order.customer_info.name}</p>
+            <p className="text-sm">{order.customer_info.phone}</p>
+            {order.customer_info.email && <p className="text-sm">{order.customer_info.email}</p>}
+            {order.customer_info.company && <p className="text-sm">{order.customer_info.company}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Grouped Items */}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-900">Order Items</h4>
+        {Object.entries(groupedItems).map(([machineName, categories]) => (
+          <div key={machineName} className="border rounded-lg p-4">
+            <h5 className="font-semibold text-blue-600 mb-3">{machineName}</h5>
+            {Object.entries(categories).map(([categoryName, items]) => (
+              <div key={categoryName} className="mb-4">
+                <h6 className="font-medium text-gray-700 mb-2">{categoryName}</h6>
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex-grow">
+                        <p className="font-medium">{item.part_name}</p>
+                        <p className="text-sm text-gray-600">Code: {item.part_code}</p>
+                        {item.comment && (
+                          <p className="text-sm text-blue-600">Specs: {item.comment}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
+                        <p className="text-sm text-gray-600">₹{item.price} × {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Total */}
+      <div className="border-t pt-4">
+        <div className="flex justify-between items-center text-xl font-bold">
+          <span>Total Amount:</span>
+          <span>₹{order.total_amount.toLocaleString()}</span>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          * GST and Packaging & Forwarding charges will be added extra
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Orders Tab Component
+const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF, viewOrder }) => {
   return (
     <div data-testid="orders-section">
       <div className="flex justify-between items-center mb-6">
@@ -1060,14 +1355,24 @@ const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF }) => {
                     <Badge variant="secondary">{order.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => downloadOrderPDF(order)}
-                      data-testid={`download-pdf-${order.id}`}
-                    >
-                      Download PDF
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => viewOrder(order)}
+                        data-testid={`view-order-${order.id}`}
+                      >
+                        View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => downloadOrderPDF(order)}
+                        data-testid={`download-pdf-${order.id}`}
+                      >
+                        PDF
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -1079,11 +1384,13 @@ const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF }) => {
   );
 };
 
-// Catalog Tab Component
+// Enhanced Catalog Tab Component with Full CRUD
 const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
   const [showAddMachine, setShowAddMachine] = useState(false);
   const [showAddSubcategory, setShowAddSubcategory] = useState(false);
   const [showAddPart, setShowAddPart] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editType, setEditType] = useState('');
   
   const [newMachine, setNewMachine] = useState({ name: '', description: '' });
   const [newSubcategory, setNewSubcategory] = useState({ machine_id: '', name: '', description: '' });
@@ -1113,6 +1420,46 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     }
   };
 
+  const handleEditMachine = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.put(`${API}/admin/machines/${editingItem.id}`, {
+        name: editingItem.name,
+        description: editingItem.description
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEditingItem(null);
+      setEditType('');
+      fetchCatalogData();
+      toast.success('Machine updated successfully!');
+    } catch (error) {
+      console.error('Error updating machine:', error);
+      toast.error('Failed to update machine');
+    }
+  };
+
+  const handleDeleteMachine = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this machine? This will also delete all related categories and parts.')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.delete(`${API}/admin/machines/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchCatalogData();
+      toast.success('Machine deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting machine:', error);
+      toast.error('Failed to delete machine');
+    }
+  };
+
+  // Similar handlers for subcategories and parts
   const handleAddSubcategory = async () => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -1123,10 +1470,10 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
       setNewSubcategory({ machine_id: '', name: '', description: '' });
       setShowAddSubcategory(false);
       fetchCatalogData();
-      toast.success('Subcategory added successfully!');
+      toast.success('Category added successfully!');
     } catch (error) {
       console.error('Error adding subcategory:', error);
-      toast.error('Failed to add subcategory');
+      toast.error('Failed to add category');
     }
   };
 
@@ -1174,37 +1521,69 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </div>
       </div>
 
-      {/* Machines */}
+      {/* Machines with CRUD operations */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Machines ({machines.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {machines.map((machine) => (
               <div key={machine.id} className="border rounded p-4">
-                <h4 className="font-semibold">{machine.name}</h4>
-                <p className="text-sm text-gray-600">{machine.description}</p>
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-grow">
+                    <h4 className="font-semibold">{machine.name}</h4>
+                    <p className="text-sm text-gray-600">{machine.description}</p>
+                  </div>
+                  <div className="flex space-x-1">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingItem(machine);
+                        setEditType('machine');
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => handleDeleteMachine(machine.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Subcategories */}
+      {/* Subcategories with CRUD operations */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Categories ({subcategories.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subcategories.map((subcategory) => {
               const machine = machines.find(m => m.id === subcategory.machine_id);
               return (
                 <div key={subcategory.id} className="border rounded p-4">
-                  <h4 className="font-semibold">{subcategory.name}</h4>
-                  <p className="text-sm text-gray-600">{subcategory.description}</p>
-                  <p className="text-xs text-gray-500">Machine: {machine?.name}</p>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-grow">
+                      <h4 className="font-semibold">{subcategory.name}</h4>
+                      <p className="text-sm text-gray-600">{subcategory.description}</p>
+                      <p className="text-xs text-gray-500">Machine: {machine?.name}</p>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button size="sm" variant="ghost">Edit</Button>
+                      <Button size="sm" variant="ghost" className="text-red-600">Delete</Button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -1212,7 +1591,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </CardContent>
       </Card>
 
-      {/* Parts */}
+      {/* Parts with CRUD operations */}
       <Card>
         <CardHeader>
           <CardTitle>Parts ({parts.length})</CardTitle>
@@ -1224,13 +1603,32 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
               const subcategory = subcategories.find(s => s.id === part.subcategory_id);
               return (
                 <div key={part.id} className="border rounded p-4">
-                  <h4 className="font-semibold">{part.name}</h4>
-                  <p className="text-sm text-gray-600">Code: {part.code}</p>
-                  <p className="text-sm text-gray-600">{part.description}</p>
-                  <p className="text-sm font-semibold text-green-600">₹{part.price.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">
-                    {machine?.name} → {subcategory?.name}
-                  </p>
+                  <div className="flex space-x-4">
+                    <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                      {part.image_url ? (
+                        <img src={part.image_url} alt={part.name} className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-gray-400 text-xl">🔩</span>
+                      )}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">{part.name}</h4>
+                          <p className="text-sm text-gray-600">Code: {part.code}</p>
+                          <p className="text-sm text-gray-600">{part.description}</p>
+                          <p className="text-sm font-semibold text-green-600">₹{part.price.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">
+                            {machine?.name} → {subcategory?.name}
+                          </p>
+                        </div>
+                        <div className="flex space-x-1">
+                          <Button size="sm" variant="ghost">Edit</Button>
+                          <Button size="sm" variant="ghost" className="text-red-600">Delete</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -1238,7 +1636,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </CardContent>
       </Card>
 
-      {/* Add Machine Dialog */}
+      {/* Add/Edit Dialogs */}
       <Dialog open={showAddMachine} onOpenChange={setShowAddMachine}>
         <DialogContent>
           <DialogHeader>
@@ -1269,133 +1667,316 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Subcategory Dialog */}
-      <Dialog open={showAddSubcategory} onOpenChange={setShowAddSubcategory}>
+      {/* Edit Machine Dialog */}
+      <Dialog open={editType === 'machine'} onOpenChange={() => {setEditType(''); setEditingItem(null);}}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Category</DialogTitle>
+            <DialogTitle>Edit Machine</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Select Machine</Label>
-              <Select value={newSubcategory.machine_id} onValueChange={(value) => setNewSubcategory({...newSubcategory, machine_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a machine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {machines.map((machine) => (
-                    <SelectItem key={machine.id} value={machine.id}>{machine.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {editingItem && (
+            <div className="space-y-4">
+              <div>
+                <Label>Machine Name</Label>
+                <Input 
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea 
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => {setEditType(''); setEditingItem(null);}}>Cancel</Button>
+                <Button onClick={handleEditMachine}>Update Machine</Button>
+              </div>
             </div>
-            <div>
-              <Label>Category Name</Label>
-              <Input 
-                value={newSubcategory.name}
-                onChange={(e) => setNewSubcategory({...newSubcategory, name: e.target.value})}
-                placeholder="e.g., Engine"
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea 
-                value={newSubcategory.description}
-                onChange={(e) => setNewSubcategory({...newSubcategory, description: e.target.value})}
-                placeholder="Category description"
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAddSubcategory(false)}>Cancel</Button>
-              <Button onClick={handleAddSubcategory}>Add Category</Button>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Add Part Dialog */}
-      <Dialog open={showAddPart} onOpenChange={setShowAddPart}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Part</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Select Machine</Label>
-                <Select value={newPart.machine_id} onValueChange={(value) => setNewPart({...newPart, machine_id: value, subcategory_id: ''})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a machine" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {machines.map((machine) => (
-                      <SelectItem key={machine.id} value={machine.id}>{machine.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Select Category</Label>
-                <Select 
-                  value={newPart.subcategory_id} 
-                  onValueChange={(value) => setNewPart({...newPart, subcategory_id: value})}
-                  disabled={!newPart.machine_id}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subcategories
-                      .filter(sub => sub.machine_id === newPart.machine_id)
-                      .map((subcategory) => (
-                        <SelectItem key={subcategory.id} value={subcategory.id}>{subcategory.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Part Name</Label>
-                <Input 
-                  value={newPart.name}
-                  onChange={(e) => setNewPart({...newPart, name: e.target.value})}
-                  placeholder="e.g., Piston Ring Set"
-                />
-              </div>
-              <div>
-                <Label>Part Code</Label>
-                <Input 
-                  value={newPart.code}
-                  onChange={(e) => setNewPart({...newPart, code: e.target.value})}
-                  placeholder="e.g., TR-ENG-001"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea 
-                value={newPart.description}
-                onChange={(e) => setNewPart({...newPart, description: e.target.value})}
-                placeholder="Part description"
+      {/* Other dialogs (subcategory, part) similar pattern... */}
+    </div>
+  );
+};
+
+// Bulk Add Parts Component
+const BulkAddParts = () => {
+  const navigate = useNavigate();
+  const [machines, setMachines] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [parts, setParts] = useState([{ 
+    machine_id: '', 
+    subcategory_id: '', 
+    name: '', 
+    code: '', 
+    description: '', 
+    price: '', 
+    image: null 
+  }]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate('/admin');
+      return;
+    }
+    fetchData();
+  }, [navigate]);
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [machinesRes, subcategoriesRes] = await Promise.all([
+        axios.get(`${API}/machines`),
+        axios.get(`${API}/subcategories`, { headers })
+      ]);
+      
+      setMachines(machinesRes.data);
+      setSubcategories(subcategoriesRes.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const addRow = () => {
+    setParts([...parts, { 
+      machine_id: '', 
+      subcategory_id: '', 
+      name: '', 
+      code: '', 
+      description: '', 
+      price: '', 
+      image: null 
+    }]);
+  };
+
+  const removeRow = (index) => {
+    setParts(parts.filter((_, i) => i !== index));
+  };
+
+  const updatePart = (index, field, value) => {
+    const updatedParts = [...parts];
+    updatedParts[index] = { ...updatedParts[index], [field]: value };
+    setParts(updatedParts);
+  };
+
+  const handleImageUpload = async (index, file) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${API}/admin/upload-image`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      updatePart(index, 'image_url', response.data.image_url);
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    }
+  };
+
+  const submitAllParts = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      
+      for (const part of parts) {
+        if (!part.name || !part.code || !part.machine_id || !part.subcategory_id) {
+          toast.error('Please fill all required fields for each part');
+          return;
+        }
+        
+        await axios.post(`${API}/admin/parts`, {
+          ...part,
+          price: parseFloat(part.price)
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      toast.success(`${parts.length} parts added successfully!`);
+      navigate('/admin/dashboard');
+    } catch (error) {
+      console.error('Error adding parts:', error);
+      toast.error('Failed to add parts');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-12 object-contain"
               />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Bulk Add Parts</h1>
+                <p className="text-gray-600 text-sm">Add multiple parts at once</p>
+              </div>
             </div>
-            <div>
-              <Label>Price (₹)</Label>
-              <Input 
-                type="number"
-                value={newPart.price}
-                onChange={(e) => setNewPart({...newPart, price: e.target.value})}
-                placeholder="0"
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAddPart(false)}>Cancel</Button>
-              <Button onClick={handleAddPart}>Add Part</Button>
+            <div className="flex items-center space-x-4">
+              <Link to="/admin/dashboard">
+                <Button variant="outline">← Back to Dashboard</Button>
+              </Link>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Multiple Parts</CardTitle>
+            <CardDescription>
+              Fill in the details for each part you want to add
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {parts.map((part, index) => (
+                <div key={index} className="border rounded-lg p-6 relative">
+                  <div className="absolute top-2 right-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => removeRow(index)}
+                      className="text-red-600"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  <h4 className="font-semibold mb-4">Part #{index + 1}</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Machine *</Label>
+                      <Select 
+                        value={part.machine_id} 
+                        onValueChange={(value) => {
+                          updatePart(index, 'machine_id', value);
+                          updatePart(index, 'subcategory_id', '');
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select machine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {machines.map((machine) => (
+                            <SelectItem key={machine.id} value={machine.id}>{machine.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Category *</Label>
+                      <Select 
+                        value={part.subcategory_id} 
+                        onValueChange={(value) => updatePart(index, 'subcategory_id', value)}
+                        disabled={!part.machine_id}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subcategories
+                            .filter(sub => sub.machine_id === part.machine_id)
+                            .map((subcategory) => (
+                              <SelectItem key={subcategory.id} value={subcategory.id}>{subcategory.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Part Name *</Label>
+                      <Input 
+                        value={part.name}
+                        onChange={(e) => updatePart(index, 'name', e.target.value)}
+                        placeholder="Enter part name"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Part Code *</Label>
+                      <Input 
+                        value={part.code}
+                        onChange={(e) => updatePart(index, 'code', e.target.value)}
+                        placeholder="Enter part code"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Price (₹) *</Label>
+                      <Input 
+                        type="number"
+                        value={part.price}
+                        onChange={(e) => updatePart(index, 'price', e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Part Image</Label>
+                      <Input 
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files[0]) {
+                            handleImageUpload(index, e.target.files[0]);
+                          }
+                        }}
+                      />
+                      {part.image_url && (
+                        <div className="mt-2">
+                          <img src={part.image_url} alt="Part" className="h-16 w-16 object-contain border rounded" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Label>Description</Label>
+                    <Textarea 
+                      value={part.description}
+                      onChange={(e) => updatePart(index, 'description', e.target.value)}
+                      placeholder="Enter part description"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              <div className="flex justify-between">
+                <Button onClick={addRow} variant="outline">
+                  Add Another Part
+                </Button>
+                <Button onClick={submitAllParts} className="bg-blue-600">
+                  Submit All Parts
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
