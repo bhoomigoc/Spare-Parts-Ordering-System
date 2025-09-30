@@ -325,11 +325,14 @@ async def create_machine(machine_data: MachineCreate, admin: Admin = Depends(get
     await db.machines.insert_one(machine_mongo)
     return machine_obj
 
+class MachineUpdate(BaseModel):
+    name: str
+    description: str
+    image_url: Optional[str] = None
+
 @api_router.put("/admin/machines/{machine_id}", response_model=Machine)
-async def update_machine(machine_id: str, machine_data: MachineCreate, admin: Admin = Depends(get_current_admin)):
+async def update_machine(machine_id: str, machine_data: MachineUpdate, admin: Admin = Depends(get_current_admin)):
     machine_dict = machine_data.dict()
-    machine_dict["id"] = machine_id
-    machine_dict["created_at"] = datetime.now(timezone.utc)
     
     result = await db.machines.update_one(
         {"id": machine_id}, 
