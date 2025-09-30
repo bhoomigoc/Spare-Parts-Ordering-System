@@ -149,6 +149,45 @@ backend:
       - working: true
         agent: "testing"
         comment: "TESTED: All part CRUD operations working perfectly. Create (POST /api/admin/parts), Update (PUT /api/admin/parts/{id}), Delete (DELETE /api/admin/parts/{id}) all return proper responses with authentication."
+      - working: true
+        agent: "testing"
+        comment: "UPDATED TESTING COMPLETE: ✅ Multiple machine support verified - parts can now belong to multiple machines using machine_ids array. ✅ New part creation with machine_ids works perfectly. ✅ Inline price update endpoint (PUT /api/admin/parts/{id}/price) working correctly. ✅ Backward compatibility confirmed - all parts have machine_ids populated. ✅ GET /api/machines/{id}/parts returns correct parts for each machine. All 17 backend tests passed successfully."
+
+  - task: "Multiple Machine Support for Parts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TESTED: ✅ Parts can be created with multiple machines using machine_ids array. ✅ Created test part 'Universal Bearing' belonging to 2 machines successfully. ✅ Part appears correctly in both machines' parts lists via GET /api/machines/{id}/parts. ✅ Part model supports both legacy machine_id and new machine_ids fields for backward compatibility."
+
+  - task: "Inline Price Update Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TESTED: ✅ PUT /api/admin/parts/{id}/price endpoint working perfectly. ✅ Price updates correctly via query parameter. ✅ Only price field is updated, other fields remain unchanged. ✅ Returns proper success response with new price value."
+
+  - task: "Backward Compatibility with Legacy Parts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TESTED: ✅ All existing parts automatically have machine_ids populated from legacy machine_id field. ✅ GET /api/parts endpoint returns all parts with proper machine_ids format. ✅ Legacy parts work seamlessly with new multiple machine functionality. ✅ No breaking changes to existing functionality confirmed."
 
   - task: "Image upload functionality"
     implemented: true
