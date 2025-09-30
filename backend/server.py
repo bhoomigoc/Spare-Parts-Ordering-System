@@ -76,8 +76,9 @@ class SubcategoryCreate(BaseModel):
 
 class Part(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    machine_id: str
-    subcategory_id: str
+    machine_id: str  # Keep for backward compatibility
+    machine_ids: List[str] = Field(default_factory=list)  # New field for multiple machines
+    subcategory_id: str  # Keep for backward compatibility
     name: str
     code: str
     description: str
@@ -86,8 +87,7 @@ class Part(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PartCreate(BaseModel):
-    machine_id: str
-    subcategory_id: str
+    machine_ids: List[str]  # Changed to support multiple machines
     name: str
     code: str
     description: str
