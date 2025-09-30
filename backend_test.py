@@ -290,25 +290,24 @@ class BackendTester:
         
         return True
     
-    def test_part_crud(self, machines, subcategories):
-        """Test 8: Part CRUD operations"""
-        if not machines or not subcategories:
-            self.log_test("Part CRUD", False, "No machines or subcategories available for part testing")
+    def test_part_crud_multiple_machines(self, machines):
+        """Test 8: Part CRUD operations with multiple machine support"""
+        if not machines or len(machines) < 2:
+            self.log_test("Part CRUD Multiple Machines", False, "Need at least 2 machines for multiple machine testing")
             return False
         
-        machine_id = machines[0]["id"]
-        subcategory_id = subcategories[0]["id"]
+        machine_id_1 = machines[0]["id"]
+        machine_id_2 = machines[1]["id"]
         created_part_id = None
         
-        # Test CREATE
+        # Test CREATE with multiple machines
         try:
             part_data = {
-                "machine_id": machine_id,
-                "subcategory_id": subcategory_id,
-                "name": "Test Part",
-                "code": "TEST-001",
-                "description": "A test part for CRUD operations",
-                "price": 999.99
+                "machine_ids": [machine_id_1, machine_id_2],
+                "name": "Multi-Machine Test Part",
+                "code": "MULTI-001",
+                "description": "A test part that works with multiple machines",
+                "price": 1599.99
             }
             
             response = self.make_request("POST", "/admin/parts", data=part_data, auth_required=True)
@@ -316,38 +315,63 @@ class BackendTester:
             if response.status_code == 200:
                 part = response.json()
                 created_part_id = part.get("id")
-                self.log_test("Create Part", True, f"Created part with ID: {created_part_id}")
+                machine_ids = part.get("machine_ids", [])
+                if len(machine_ids) == 2 and machine_id_1 in machine_ids and machine_id_2 in machine_ids:
+                    self.log_test("Create Part Multiple Machines", True, f"Created part with ID: {created_part_id} for {len(machine_ids)} machines")
+                else:
+                    self.log_test("Create Part Multiple Machines", False, f"Part created but machine_ids not correct: {machine_ids}")
             else:
-                self.log_test("Create Part", False, f"Failed with status {response.status_code}", response.text)
+                self.log_test("Create Part Multiple Machines", False, f"Failed with status {response.status_code}", response.text)
                 return False
         except Exception as e:
-            self.log_test("Create Part", False, f"Exception occurred: {str(e)}")
+            self.log_test("Create Part Multiple Machines", False, f"Exception occurred: {str(e)}")
             return False
         
-        # Test UPDATE
+        # Test UPDATE with different machines
         if created_part_id:
             try:
+                # Add a third machine if available
+                machine_ids_update = [machine_id_1, machine_id_2]
+                if len(machines) > 2:
+                    machine_ids_update.append(machines[2]["id"])
+                
                 update_data = {
-                    "machine_id": machine_id,
-                    "subcategory_id": subcategory_id,
-                    "name": "Updated Test Part",
-                    "code": "TEST-001-UPD",
-                    "description": "Updated description for test part",
-                    "price": 1299.99
+                    "machine_ids": machine_ids_update,
+                    "name": "Updated Multi-Machine Part",
+                    "code": "MULTI-001-UPD",
+                    "description": "Updated multi-machine part description",
+                    "price": 1899.99
                 }
                 
                 response = self.make_request("PUT", f"/admin/parts/{created_part_id}", data=update_data, auth_required=True)
                 
                 if response.status_code == 200:
                     updated_part = response.json()
-                    if updated_part.get("name") == "Updated Test Part":
-                        self.log_test("Update Part", True, f"Successfully updated part {created_part_id}")
+                    if updated_part.get("name") == "Updated Multi-Machine Part":
+                        self.log_test("Update Part Multiple Machines", True, f"Successfully updated part {created_part_id} with {len(machine_ids_update)} machines")
                     else:
-                        self.log_test("Update Part", False, "Part not properly updated", updated_part)
+                        self.log_test("Update Part Multiple Machines", False, "Part not properly updated", updated_part)
                 else:
-                    self.log_test("Update Part", False, f"Failed with status {response.status_code}", response.text)
+                    self.log_test("Update Part Multiple Machines", False, f"Failed with status {response.status_code}", response.text)
             except Exception as e:
-                self.log_test("Update Part", False, f"Exception occurred: {str(e)}")
+                self.log_test("Update Part Multiple Machines", False, f"Exception occurred: {str(e)}")
+        
+        # Test inline price update
+        if created_part_id:
+            try:
+                new_price = 2199.99
+                response = self.make_request("PUT", f"/admin/parts/{created_part_id}/price", data=new_price, auth_required=True)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("new_price") == new_price:
+                        self.log_test("Update Part Price Only", True, f"Successfully updated price to ₹{new_price}")
+                    else:
+                        self.log_test("Update Part Price Only", False, "Price not properly updated", result)
+                else:
+                    self.log_test("Update Part Price Only", False, f"Failed with status {response.status_code}", response.text)
+            except Exception as e:
+                self.log_test("Update Part Price Only", False, f"Exception occurred: {str(e)}")
         
         # Test DELETE
         if created_part_id:
@@ -355,16 +379,90 @@ class BackendTester:
                 response = self.make_request("DELETE", f"/admin/parts/{created_part_id}", auth_required=True)
                 
                 if response.status_code == 200:
-                    self.log_test("Delete Part", True, f"Successfully deleted part {created_part_id}")
+                    self.log_test("Delete Multi-Machine Part", True, f"Successfully deleted part {created_part_id}")
                     return True
                 else:
-                    self.log_test("Delete Part", False, f"Failed with status {response.status_code}", response.text)
+                    self.log_test("Delete Multi-Machine Part", False, f"Failed with status {response.status_code}", response.text)
                     return False
             except Exception as e:
-                self.log_test("Delete Part", False, f"Exception occurred: {str(e)}")
+                self.log_test("Delete Multi-Machine Part", False, f"Exception occurred: {str(e)}")
                 return False
         
         return True
+    
+    def test_parts_by_machine(self, machines):
+        """Test 9: Get parts by machine endpoint"""
+        if not machines:
+            self.log_test("Parts by Machine", False, "No machines available for testing")
+            return False
+        
+        try:
+            machine_id = machines[0]["id"]
+            response = self.make_request("GET", f"/machines/{machine_id}/parts")
+            
+            if response.status_code == 200:
+                parts = response.json()
+                if isinstance(parts, list):
+                    # Check that all parts have machine_ids array and contain the requested machine_id
+                    valid_parts = 0
+                    for part in parts:
+                        machine_ids = part.get("machine_ids", [])
+                        if isinstance(machine_ids, list) and machine_id in machine_ids:
+                            valid_parts += 1
+                    
+                    if valid_parts == len(parts):
+                        self.log_test("Parts by Machine", True, f"Retrieved {len(parts)} parts for machine {machine_id}, all have correct machine_ids")
+                        return True
+                    else:
+                        self.log_test("Parts by Machine", False, f"Some parts don't have correct machine_ids: {valid_parts}/{len(parts)}")
+                        return False
+                else:
+                    self.log_test("Parts by Machine", False, "Invalid response format", parts)
+                    return False
+            else:
+                self.log_test("Parts by Machine", False, f"Failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Parts by Machine", False, f"Exception occurred: {str(e)}")
+            return False
+    
+    def test_backward_compatibility(self):
+        """Test 10: Backward compatibility with legacy parts"""
+        try:
+            # Get all parts and check they have machine_ids populated
+            response = self.make_request("GET", "/parts", auth_required=True)
+            
+            if response.status_code == 200:
+                parts = response.json()
+                if isinstance(parts, list) and len(parts) > 0:
+                    legacy_converted = 0
+                    for part in parts:
+                        # Check if part has machine_ids array
+                        machine_ids = part.get("machine_ids", [])
+                        machine_id = part.get("machine_id", "")
+                        
+                        if isinstance(machine_ids, list) and len(machine_ids) > 0:
+                            # If it has legacy machine_id, check if it's included in machine_ids
+                            if machine_id and machine_id in machine_ids:
+                                legacy_converted += 1
+                            elif not machine_id:  # New format part
+                                legacy_converted += 1
+                    
+                    if legacy_converted == len(parts):
+                        self.log_test("Backward Compatibility", True, f"All {len(parts)} parts have proper machine_ids format")
+                        return True
+                    else:
+                        self.log_test("Backward Compatibility", False, f"Some parts missing machine_ids: {legacy_converted}/{len(parts)}")
+                        return False
+                else:
+                    self.log_test("Backward Compatibility", False, "No parts found for compatibility testing")
+                    return False
+            else:
+                self.log_test("Backward Compatibility", False, f"Failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Backward Compatibility", False, f"Exception occurred: {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend tests"""
