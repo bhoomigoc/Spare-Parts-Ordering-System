@@ -450,6 +450,18 @@ async def update_part(part_id: str, part_data: PartUpdate, admin: Admin = Depend
     
     return Part(**parse_from_mongo(updated_part))
 
+@api_router.put("/admin/parts/{part_id}/price")
+async def update_part_price(part_id: str, price: float, admin: Admin = Depends(get_current_admin)):
+    result = await db.parts.update_one(
+        {"id": part_id}, 
+        {"$set": {"price": price}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Part not found")
+    
+    return {"message": "Price updated successfully", "new_price": price}
+
 @api_router.delete("/admin/parts/{part_id}")
 async def delete_part(part_id: str, admin: Admin = Depends(get_current_admin)):
     result = await db.parts.delete_one({"id": part_id})
