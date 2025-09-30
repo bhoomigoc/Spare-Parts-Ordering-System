@@ -321,13 +321,13 @@ const CustomerCatalog = () => {
                   onClick={() => fetchParts(subcategory.id)}
                   data-testid={`subcategory-card-${subcategory.id}`}
                 >
-                  <CardHeader>
-                    <CardTitle>{subcategory.name}</CardTitle>
-                    <CardDescription>{subcategory.description}</CardDescription>
+                  <CardHeader className="p-3 sm:p-6">
+                    <CardTitle className="text-base sm:text-lg text-center">{subcategory.name}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm text-center">{subcategory.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400 text-2xl">⚙️</span>
+                  <CardContent className="p-3 sm:p-6">
+                    <div className="w-full h-16 sm:h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-400 text-xl sm:text-2xl">⚙️</span>
                     </div>
                   </CardContent>
                 </Card>
