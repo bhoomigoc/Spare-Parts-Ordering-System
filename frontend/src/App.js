@@ -1844,7 +1844,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         </div>
       </div>
 
-      {/* Machines with CRUD operations */}
+      {/* Machines with CRUD operations and images */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Machines ({machines.length})</CardTitle>
@@ -1853,6 +1853,13 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {machines.map((machine) => (
               <div key={machine.id} className="border rounded p-4">
+                <div className="w-full h-24 bg-gray-100 rounded mb-3 flex items-center justify-center">
+                  {machine.image_url ? (
+                    <img src={machine.image_url} alt={machine.name} className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-gray-400 text-2xl">🔧</span>
+                  )}
+                </div>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-grow">
                     <h4 className="font-semibold">{machine.name}</h4>
