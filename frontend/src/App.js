@@ -151,36 +151,44 @@ const CustomerCatalog = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <img 
                 src="/bhoomi-logo.png" 
                 alt="Bhoomi Enterprises" 
-                className="h-12 object-contain"
+                className="h-10 sm:h-12 object-contain"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Bhoomi Enterprises</h1>
-                <p className="text-gray-600 text-sm">Spare Parts Ordering System</p>
-              </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link to="/cart">
                 <Button
                   variant="outline"
                   data-testid="cart-button"
-                  className="relative"
+                  className="relative text-xs sm:text-sm px-2 sm:px-4"
+                  size="sm"
                 >
-                  Cart ({cart.length})
+                  <span className="hidden sm:inline">Cart</span>
+                  <span className="sm:hidden">🛒</span>
+                  <span className="hidden sm:inline ml-1">({cart.length})</span>
                   {cart.length > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1">
+                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 py-0 min-w-[1.2rem] h-5">
                       {cart.reduce((sum, item) => sum + item.quantity, 0)}
                     </Badge>
                   )}
                 </Button>
               </Link>
+              <Link to="/contact">
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
+                  <span className="hidden sm:inline">Contact</span>
+                  <span className="sm:hidden">📞</span>
+                </Button>
+              </Link>
               <Link to="/admin">
-                <Button variant="ghost" data-testid="admin-login-link">Admin Login</Button>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4" data-testid="admin-login-link">
+                  <span className="hidden sm:inline">Admin</span>
+                  <span className="sm:hidden">⚙️</span>
+                </Button>
               </Link>
             </div>
           </div>
