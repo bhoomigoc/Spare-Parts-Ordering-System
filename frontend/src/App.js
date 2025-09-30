@@ -370,32 +370,33 @@ const PartCard = ({ part, onAddToCart }) => {
 
   return (
     <Card className="hover:shadow-lg transition-shadow" data-testid={`part-card-${part.id}`}>
-      <CardHeader>
-        <CardTitle className="text-lg">{part.name}</CardTitle>
-        <CardDescription>Code: {part.code}</CardDescription>
+      <CardHeader className="p-3 sm:p-6">
+        <CardTitle className="text-sm sm:text-lg text-center">{part.name}</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-center">Code: {part.code}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+      <CardContent className="p-3 sm:p-6">
+        <div className="w-full h-20 sm:h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
           {part.image_url ? (
             <img src={part.image_url} alt={part.name} className="max-h-full max-w-full object-contain" />
           ) : (
-            <span className="text-gray-400 text-3xl">🔩</span>
+            <span className="text-gray-400 text-xl sm:text-3xl">🔩</span>
           )}
         </div>
-        <p className="text-sm text-gray-600 mb-3">{part.description}</p>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-lg font-bold text-green-600">₹{part.price.toLocaleString()}</span>
+        <p className="text-xs sm:text-sm text-gray-600 mb-3">{part.description}</p>
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-sm sm:text-lg font-bold text-green-600">₹{part.price.toLocaleString()}</span>
         </div>
         
         {/* Quantity Selector */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium">Quantity:</span>
-          <div className="flex items-center space-x-2">
+          <span className="text-xs sm:text-sm font-medium">Qty:</span>
+          <div className="flex items-center space-x-1">
             <Button 
               size="sm" 
               variant="outline"
               onClick={() => handleQuantityChange(-1)}
               data-testid={`decrease-part-quantity-${part.id}`}
+              className="h-6 w-6 p-0 text-xs"
             >
               -
             </Button>
@@ -403,7 +404,7 @@ const PartCard = ({ part, onAddToCart }) => {
               type="number" 
               value={quantity} 
               onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 text-center"
+              className="w-12 sm:w-16 text-center h-6 text-xs"
               data-testid={`part-quantity-input-${part.id}`}
             />
             <Button 
@@ -411,6 +412,7 @@ const PartCard = ({ part, onAddToCart }) => {
               variant="outline"
               onClick={() => handleQuantityChange(1)}
               data-testid={`increase-part-quantity-${part.id}`}
+              className="h-6 w-6 p-0 text-xs"
             >
               +
             </Button>
@@ -419,7 +421,8 @@ const PartCard = ({ part, onAddToCart }) => {
 
         <Button 
           onClick={() => onAddToCart(part, quantity)} 
-          className="w-full"
+          className="w-full text-xs sm:text-sm"
+          size="sm"
           data-testid={`add-to-cart-${part.id}`}
         >
           Add {quantity} to Cart
