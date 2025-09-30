@@ -2343,8 +2343,8 @@ const BulkAddParts = () => {
       const token = localStorage.getItem('adminToken');
       
       for (const part of parts) {
-        if (!part.name || !part.code || !part.machine_id || !part.subcategory_id) {
-          toast.error('Please fill all required fields for each part');
+        if (!part.name || !part.code || !part.machine_ids || part.machine_ids.length === 0) {
+          toast.error('Please fill all required fields for each part and select at least one machine');
           return;
         }
         
