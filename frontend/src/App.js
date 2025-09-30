@@ -1596,7 +1596,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
   const [editingItem, setEditingItem] = useState(null);
   const [editType, setEditType] = useState('');
   
-  const [newMachine, setNewMachine] = useState({ name: '', description: '' });
+  const [newMachine, setNewMachine] = useState({ name: '', description: '', image_url: '' });
   const [newSubcategory, setNewSubcategory] = useState({ machine_id: '', name: '', description: '' });
   const [newPart, setNewPart] = useState({ 
     machine_id: '', 
@@ -1604,8 +1604,42 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     name: '', 
     code: '', 
     description: '', 
-    price: 0 
+    price: 0,
+    image_url: ''
   });
+
+  // Image upload handler
+  const handleImageUpload = async (file, type, id = null) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${API}/admin/upload-image`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const imageUrl = response.data.image_url;
+      
+      if (type === 'machine' && !id) {
+        setNewMachine({...newMachine, image_url: imageUrl});
+      } else if (type === 'machine' && id) {
+        setEditingItem({...editingItem, image_url: imageUrl});
+      } else if (type === 'part' && !id) {
+        setNewPart({...newPart, image_url: imageUrl});
+      } else if (type === 'part' && id) {
+        setEditingItem({...editingItem, image_url: imageUrl});
+      }
+      
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    }
+  };
 
   const handleAddMachine = async () => {
     try {
@@ -1614,7 +1648,7 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setNewMachine({ name: '', description: '' });
+      setNewMachine({ name: '', description: '', image_url: '' });
       setShowAddMachine(false);
       fetchCatalogData();
       toast.success('Machine added successfully!');
@@ -1629,7 +1663,8 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
       const token = localStorage.getItem('adminToken');
       await axios.put(`${API}/admin/machines/${editingItem.id}`, {
         name: editingItem.name,
-        description: editingItem.description
+        description: editingItem.description,
+        image_url: editingItem.image_url
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -1663,7 +1698,6 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     }
   };
 
-  // Similar handlers for subcategories and parts
   const handleAddSubcategory = async () => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -1678,6 +1712,46 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     } catch (error) {
       console.error('Error adding subcategory:', error);
       toast.error('Failed to add category');
+    }
+  };
+
+  const handleEditSubcategory = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.put(`${API}/admin/subcategories/${editingItem.id}`, {
+        machine_id: editingItem.machine_id,
+        name: editingItem.name,
+        description: editingItem.description
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEditingItem(null);
+      setEditType('');
+      fetchCatalogData();
+      toast.success('Category updated successfully!');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      toast.error('Failed to update category');
+    }
+  };
+
+  const handleDeleteSubcategory = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this category? This will also delete all related parts.')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.delete(`${API}/admin/subcategories/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchCatalogData();
+      toast.success('Category deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
     }
   };
 
@@ -1697,7 +1771,8 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
         name: '', 
         code: '', 
         description: '', 
-        price: 0 
+        price: 0,
+        image_url: ''
       });
       setShowAddPart(false);
       fetchCatalogData();
@@ -1705,6 +1780,50 @@ const CatalogTab = ({ machines, subcategories, parts, fetchCatalogData }) => {
     } catch (error) {
       console.error('Error adding part:', error);
       toast.error('Failed to add part');
+    }
+  };
+
+  const handleEditPart = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.put(`${API}/admin/parts/${editingItem.id}`, {
+        machine_id: editingItem.machine_id,
+        subcategory_id: editingItem.subcategory_id,
+        name: editingItem.name,
+        code: editingItem.code,
+        description: editingItem.description,
+        price: parseFloat(editingItem.price),
+        image_url: editingItem.image_url
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEditingItem(null);
+      setEditType('');
+      fetchCatalogData();
+      toast.success('Part updated successfully!');
+    } catch (error) {
+      console.error('Error updating part:', error);
+      toast.error('Failed to update part');
+    }
+  };
+
+  const handleDeletePart = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this part?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.delete(`${API}/admin/parts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchCatalogData();
+      toast.success('Part deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting part:', error);
+      toast.error('Failed to delete part');
     }
   };
 
