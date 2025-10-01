@@ -1586,7 +1586,7 @@ const OrderViewDialog = ({ order }) => {
       <div className="border-t pt-4">
         <div className="flex justify-between items-center text-xl font-bold">
           <span>Total Amount:</span>
-          <span>₹{order.total_amount.toLocaleString()}</span>
+          <span>Rs {order.total_amount.toLocaleString()}</span>
         </div>
         <p className="text-xs text-gray-500 mt-1">
           * GST and Packaging & Forwarding charges will be added extra
