@@ -42,41 +42,65 @@ const contactInfo = {
 // Footer Component
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white mt-16">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid md:grid-cols-4 gap-8">
-          <div className="md:col-span-2">
-            <img 
-              src="/bhoomi-logo.png" 
-              alt="Bhoomi Enterprises" 
-              className="h-12 object-contain mb-4 filter brightness-0 invert"
-            />
-            <p className="text-gray-300 text-sm mb-4">
-              Your trusted partner for quality spare parts and agricultural machinery components.
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/" className="hover:text-white">Catalog</Link></li>
-              <li><Link to="/contact" className="hover:text-white">Contact Us</Link></li>
-              <li><Link to="/admin" className="hover:text-white">Admin</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">Contact</h4>
-            <div className="text-sm text-gray-300 space-y-1">
-              <p>📧 {contactInfo.email}</p>
-              <p>📞 +91 {contactInfo.phone}</p>
-              <p>🕒 {contactInfo.hours}</p>
+    <footer className="bg-gray-900 text-white mt-8">
+      <div className="w-full px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Mobile compact layout */}
+          <div className="block sm:hidden">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-8 object-contain filter brightness-0 invert"
+              />
+              <div className="text-sm text-gray-300 space-y-1">
+                <p>📧 {contactInfo.email}</p>
+                <p>📞 +91-{contactInfo.phone}</p>
+                <p>🕒 {contactInfo.hours}</p>
+              </div>
+              <div className="flex space-x-4 text-xs">
+                <Link to="/" className="hover:text-white">Catalog</Link>
+                <Link to="/contact" className="hover:text-white">Contact</Link>
+                <Link to="/admin" className="hover:text-white">Admin</Link>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-          <p>&copy; 2024 {contactInfo.company}. All rights reserved.</p>
+
+          {/* Desktop layout */}
+          <div className="hidden sm:grid md:grid-cols-4 gap-8">
+            <div className="md:col-span-2">
+              <img 
+                src="/bhoomi-logo.png" 
+                alt="Bhoomi Enterprises" 
+                className="h-12 object-contain mb-4 filter brightness-0 invert"
+              />
+              <p className="text-gray-300 text-sm mb-4">
+                Your trusted partner for quality spare parts and agricultural machinery components.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li><Link to="/" className="hover:text-white">Catalog</Link></li>
+                <li><Link to="/contact" className="hover:text-white">Contact Us</Link></li>
+                <li><Link to="/admin" className="hover:text-white">Admin</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <div className="text-sm text-gray-300 space-y-1">
+                <p>📧 {contactInfo.email}</p>
+                <p>📞 +91-{contactInfo.phone}</p>
+                <p>🕒 {contactInfo.hours}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-700 mt-4 sm:mt-8 pt-4 sm:pt-6 text-center text-xs sm:text-sm text-gray-400">
+            <p>&copy; 2024 {contactInfo.company}. All rights reserved.</p>
+          </div>
         </div>
       </div>
     </footer>
