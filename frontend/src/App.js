@@ -2060,7 +2060,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/admin/parts`, {
+      await axios.post(`${API}/api/admin/parts`, {
         ...newPart,
         price: parseFloat(newPart.price)
       }, {
@@ -2103,7 +2103,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/parts/${editingItem.id}`, {
+      await axios.put(`${API}/api/admin/parts/${editingItem.id}`, {
         machine_ids: editingItem.machine_ids,
         name: editingItem.name,
         code: editingItem.code,
@@ -2131,7 +2131,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`${API}/admin/parts/${id}`, {
+      await axios.delete(`${API}/api/admin/parts/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2688,7 +2688,7 @@ const BulkAddParts = () => {
           return;
         }
         
-        await axios.post(`${API}/admin/parts`, {
+        await axios.post(`${API}/api/admin/parts`, {
           ...part,
           price: parseFloat(part.price)
         }, {
