@@ -454,7 +454,7 @@ const CustomerCatalog = () => {
               {machines.length === 0 && (
                 <div className="col-span-full text-center py-8">
                   <p className="text-gray-500">Loading machines... If this persists, there may be an API issue.</p>
-                  <p className="text-sm text-gray-400 mt-2">API URL: {API}/api/machines</p>
+                  <p className="text-sm text-gray-400 mt-2">API URL: {API}/machines</p>
                 </div>
               )}
               {machines.map((machine) => (
