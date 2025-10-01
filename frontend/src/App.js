@@ -1987,7 +1987,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const handleAddMachine = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/admin/machines`, newMachine, {
+      await axios.post(`${API}/api/admin/machines`, newMachine, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
