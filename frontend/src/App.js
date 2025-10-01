@@ -1525,16 +1525,13 @@ const AdminDashboard = () => {
 
 // Order View Dialog Component
 const OrderViewDialog = ({ order }) => {
-  // Group items by machine and category
+  // Group items by machine only (no subcategories)
   const groupedItems = {};
   order.items.forEach(item => {
     if (!groupedItems[item.machine_name]) {
-      groupedItems[item.machine_name] = {};
+      groupedItems[item.machine_name] = [];
     }
-    if (!groupedItems[item.machine_name][item.subcategory_name]) {
-      groupedItems[item.machine_name][item.subcategory_name] = [];
-    }
-    groupedItems[item.machine_name][item.subcategory_name].push(item);
+    groupedItems[item.machine_name].push(item);
   });
 
   return (
