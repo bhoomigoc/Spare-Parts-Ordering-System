@@ -24,10 +24,19 @@ from email.mime.multipart import MIMEMultipart
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# MongoDB connection with error handling
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/spare_parts_db')
+if not mongo_url:
+    raise ValueError("MONGO_URL environment variable is required")
+
+try:
+    client = AsyncIOMotorClient(mongo_url)
+    db_name = os.environ.get('DB_NAME', 'spare_parts_db')
+    db = client[db_name]
+    print(f"✅ Connected to MongoDB: {db_name}")
+except Exception as e:
+    print(f"❌ Failed to connect to MongoDB: {e}")
+    raise
 
 # Create the main app
 app = FastAPI(title="Spare Parts Ordering API")
