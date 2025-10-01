@@ -864,6 +864,12 @@ class BackendTester:
                     else:
                         self.log_test("Machine Parts Endpoint", False, f"Failed to get parts for machine {machine_id}: status {parts_response.status_code}")
                 
+                # Step 5: Test machine data integrity
+                self.test_machine_data_integrity()
+                
+                # Step 6: Test machine-parts relationship
+                self.test_machine_parts_relationship()
+                
                 return True
                 
             except Exception as e:
@@ -871,6 +877,117 @@ class BackendTester:
                 return False
         else:
             self.log_test("Machine Data Analysis", False, "No machines available for analysis")
+            return False
+
+    def test_machine_data_integrity(self):
+        """Test machine data integrity and storage verification"""
+        try:
+            # Get machines
+            response = self.make_request("GET", "/machines")
+            
+            if response.status_code != 200:
+                self.log_test("Machine Data Integrity", False, f"Failed to get machines: status {response.status_code}")
+                return False
+            
+            machines = response.json()
+            
+            if not isinstance(machines, list) or len(machines) == 0:
+                self.log_test("Machine Data Integrity", False, "No machines found or invalid format")
+                return False
+            
+            # Verify each machine has the expected structure
+            expected_fields = ['id', 'name', 'description', 'created_at']
+            valid_machines = 0
+            
+            for machine in machines:
+                # Check required fields
+                has_all_fields = all(field in machine and machine[field] for field in expected_fields)
+                
+                # Check data types
+                valid_id = isinstance(machine.get('id'), str) and len(machine.get('id', '')) > 0
+                valid_name = isinstance(machine.get('name'), str) and len(machine.get('name', '')) > 0
+                valid_desc = isinstance(machine.get('description'), str) and len(machine.get('description', '')) > 0
+                
+                # Check image_url is either None or a valid string
+                image_url = machine.get('image_url')
+                valid_image = image_url is None or (isinstance(image_url, str) and len(image_url) > 0)
+                
+                if has_all_fields and valid_id and valid_name and valid_desc and valid_image:
+                    valid_machines += 1
+                else:
+                    print(f"   Invalid machine: {machine}")
+            
+            if valid_machines == len(machines):
+                self.log_test("Machine Data Integrity", True, f"All {len(machines)} machines have valid data structure and are properly stored")
+                return True
+            else:
+                self.log_test("Machine Data Integrity", False, f"Only {valid_machines}/{len(machines)} machines have valid structure")
+                return False
+                
+        except Exception as e:
+            self.log_test("Machine Data Integrity", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_machine_parts_relationship(self):
+        """Test that machines have proper relationship with parts"""
+        try:
+            # Get machines
+            machines_response = self.make_request("GET", "/machines")
+            if machines_response.status_code != 200:
+                self.log_test("Machine Parts Relationship", False, "Failed to get machines")
+                return False
+            
+            machines = machines_response.json()
+            if not machines:
+                self.log_test("Machine Parts Relationship", False, "No machines available")
+                return False
+            
+            total_parts_found = 0
+            machines_with_parts = 0
+            
+            print(f"\n🔗 MACHINE-PARTS RELATIONSHIP ANALYSIS:")
+            
+            for machine in machines:
+                machine_id = machine['id']
+                machine_name = machine['name']
+                
+                # Get parts for this machine
+                parts_response = self.make_request("GET", f"/machines/{machine_id}/parts")
+                
+                if parts_response.status_code == 200:
+                    parts = parts_response.json()
+                    if isinstance(parts, list):
+                        parts_count = len(parts)
+                        total_parts_found += parts_count
+                        
+                        if parts_count > 0:
+                            machines_with_parts += 1
+                            
+                        # Verify each part has correct machine_ids
+                        valid_parts = 0
+                        for part in parts:
+                            machine_ids = part.get('machine_ids', [])
+                            if isinstance(machine_ids, list) and machine_id in machine_ids:
+                                valid_parts += 1
+                        
+                        if valid_parts == parts_count:
+                            print(f"   ✅ {machine_name}: {parts_count} parts (all valid)")
+                        else:
+                            print(f"   ❌ {machine_name}: {parts_count} parts ({valid_parts} valid)")
+                    else:
+                        print(f"   ❌ {machine_name}: Invalid parts response format")
+                else:
+                    print(f"   ❌ {machine_name}: Failed to get parts (status {parts_response.status_code})")
+            
+            if total_parts_found > 0:
+                self.log_test("Machine Parts Relationship", True, f"Found {total_parts_found} parts across {machines_with_parts}/{len(machines)} machines with valid relationships")
+                return True
+            else:
+                self.log_test("Machine Parts Relationship", False, "No parts found for any machine")
+                return False
+                
+        except Exception as e:
+            self.log_test("Machine Parts Relationship", False, f"Exception occurred: {str(e)}")
             return False
 
     def run_machine_loading_debug(self):
