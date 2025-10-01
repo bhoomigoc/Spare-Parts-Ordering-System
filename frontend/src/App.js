@@ -1558,31 +1558,26 @@ const OrderViewDialog = ({ order }) => {
       {/* Grouped Items */}
       <div className="space-y-4">
         <h4 className="font-semibold text-gray-900">Order Items</h4>
-        {Object.entries(groupedItems).map(([machineName, categories]) => (
+        {Object.entries(groupedItems).map(([machineName, items]) => (
           <div key={machineName} className="border rounded-lg p-4">
             <h5 className="font-semibold text-blue-600 mb-3">{machineName}</h5>
-            {Object.entries(categories).map(([categoryName, items]) => (
-              <div key={categoryName} className="mb-4">
-                <h6 className="font-medium text-gray-700 mb-2">{categoryName}</h6>
-                <div className="space-y-2">
-                  {items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex-grow">
-                        <p className="font-medium">{item.part_name}</p>
-                        <p className="text-sm text-gray-600">Code: {item.part_code}</p>
-                        {item.comment && (
-                          <p className="text-sm text-blue-600">Specs: {item.comment}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString()}</p>
-                        <p className="text-sm text-gray-600">₹{item.price} × {item.quantity}</p>
-                      </div>
-                    </div>
-                  ))}
+            <div className="space-y-2">
+              {items.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex-grow">
+                    <p className="font-medium">{item.part_name}</p>
+                    <p className="text-sm text-gray-600">Code: {item.part_code}</p>
+                    {item.comment && (
+                      <p className="text-sm text-blue-600">Specs: {item.comment}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">Rs {(item.price * item.quantity).toLocaleString()}</p>
+                    <p className="text-sm text-gray-600">Rs {item.price} × {item.quantity}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ))}
       </div>
