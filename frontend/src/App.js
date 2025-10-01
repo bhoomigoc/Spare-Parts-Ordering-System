@@ -635,30 +635,38 @@ const CartPage = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {Object.entries(groupedItems).map(([machineName, categories]) => (
+              {Object.entries(groupedItems).map(([machineName, items]) => (
                 <div key={machineName} className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{machineName}</h3>
-                  {Object.entries(categories).map(([categoryName, items]) => (
-                    <div key={categoryName} className="mb-6">
-                      <h4 className="text-lg font-semibold text-gray-700 mb-4">{categoryName}</h4>
-                      <div className="space-y-4">
-                        {items.map((item) => (
-                          <div key={item.part_id} className="flex items-center space-x-4 p-4 border rounded-lg" data-testid={`cart-item-${item.part_id}`}>
-                            {/* Product Image */}
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              {item.image_url ? (
-                                <img src={item.image_url} alt={item.part_name} className="max-h-full max-w-full object-contain" />
-                              ) : (
-                                <span className="text-gray-400 text-2xl">🔩</span>
-                              )}
-                            </div>
-                            
-                            {/* Product Details */}
-                            <div className="flex-grow">
-                              <h5 className="font-semibold">{item.part_name}</h5>
-                              <p className="text-sm text-gray-600">{item.part_code}</p>
-                              <p className="text-sm font-semibold text-green-600">₹{item.price.toLocaleString()}</p>
-                            </div>
+                  <div className="space-y-4">
+                    {items.map((item) => (
+                      <div key={item.part_id} className="flex items-center space-x-4 p-4 border rounded-lg" data-testid={`cart-item-${item.part_id}`}>
+                        {/* Product Image */}
+                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.part_name} className="max-h-full max-w-full object-contain" />
+                          ) : (
+                            <span className="text-gray-400 text-2xl">🔩</span>
+                          )}
+                        </div>
+                        
+                        {/* Product Details */}
+                        <div className="flex-grow">
+                          <h5 className="font-semibold">{item.part_name}</h5>
+                          <p className="text-sm text-gray-600">{item.part_code}</p>
+                          <p className="text-sm font-semibold text-green-600">₹{item.price.toLocaleString()}</p>
+                          
+                          {/* Individual Comment Field */}
+                          <div className="mt-2">
+                            <Input
+                              placeholder="Specifications for this item..."
+                              value={item.comment || ''}
+                              onChange={(e) => updateCartComment(item.part_id, e.target.value)}
+                              className="text-xs"
+                              data-testid={`item-comment-${item.part_id}`}
+                            />
+                          </div>
+                        </div>
                             
                             {/* Quantity Controls */}
                             <div className="flex items-center space-x-2">
