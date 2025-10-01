@@ -1033,45 +1033,76 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="name">Name *</Label>
-            <Input 
-              id="name"
-              value={customerInfo.name}
-              onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-              placeholder="Enter your name"
-              data-testid="customer-name-input"
-            />
-          </div>
-          <div>
-            <Label htmlFor="phone">Phone *</Label>
-            <Input 
-              id="phone"
-              value={customerInfo.phone}
-              onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-              placeholder="Enter your phone number"
-              data-testid="customer-phone-input"
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email"
-              type="email"
-              value={customerInfo.email}
-              onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-              placeholder="Enter your email"
-              data-testid="customer-email-input"
-            />
-          </div>
-          <div>
-            <Label htmlFor="company">Company</Label>
+            <Label htmlFor="company">Company Name *</Label>
             <Input 
               id="company"
               value={customerInfo.company}
               onChange={(e) => setCustomerInfo({...customerInfo, company: e.target.value})}
               placeholder="Enter company name"
               data-testid="customer-company-input"
+              className={validationErrors.company ? 'border-red-500' : ''}
             />
+            {validationErrors.company && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.company}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="phone">Mobile Number *</Label>
+            <Input 
+              id="phone"
+              value={customerInfo.phone}
+              onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+              placeholder="Enter 10-digit mobile number"
+              data-testid="customer-phone-input"
+              className={validationErrors.phone ? 'border-red-500' : ''}
+            />
+            {validationErrors.phone && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input 
+              id="email"
+              type="email"
+              value={customerInfo.email}
+              onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
+              placeholder="Enter email address"
+              data-testid="customer-email-input"
+              className={validationErrors.email ? 'border-red-500' : ''}
+            />
+            {validationErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="gst_number">GST Number *</Label>
+            <Input 
+              id="gst_number"
+              value={customerInfo.gst_number}
+              onChange={(e) => setCustomerInfo({...customerInfo, gst_number: e.target.value.toUpperCase()})}
+              placeholder="Enter 15-character GST number"
+              data-testid="customer-gst-input"
+              className={validationErrors.gst_number ? 'border-red-500' : ''}
+            />
+            {validationErrors.gst_number && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.gst_number}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="delivery_address">Delivery Address *</Label>
+            <Textarea 
+              id="delivery_address"
+              value={customerInfo.delivery_address}
+              onChange={(e) => setCustomerInfo({...customerInfo, delivery_address: e.target.value})}
+              placeholder="Enter complete delivery address (minimum 10 characters)"
+              rows={3}
+              data-testid="customer-address-input"
+              className={validationErrors.delivery_address ? 'border-red-500' : ''}
+            />
+            {validationErrors.delivery_address && (
+              <p className="text-red-500 text-xs mt-1">{validationErrors.delivery_address}</p>
+            )}
           </div>
         </div>
 
