@@ -648,7 +648,7 @@ const CartPage = () => {
       {/* Cart Content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Your Cart</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Items</h2>
           <div className="text-lg text-gray-600">
             {cart.reduce((sum, item) => sum + item.quantity, 0)} items
           </div>
