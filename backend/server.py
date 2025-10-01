@@ -340,13 +340,21 @@ async def create_order(order_data: OrderCreate):
         
         # Insert order into database
         result = await db.orders.insert_one(order_mongo)
+        print(f"✅ Order created successfully: {order_obj.id}")
         
-        # Send email notification
-        await send_order_notification(order_obj)
+        # Try to send email notification (don't fail if email fails)
+        try:
+            await send_order_notification(order_obj)
+            print("✅ Email notification sent")
+        except Exception as email_error:
+            print(f"⚠️ Email notification failed (order still created): {email_error}")
         
         return order_obj
+        
     except Exception as e:
-        print(f"Error creating order: {e}")
+        print(f"❌ Error creating order: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
 
 # Admin authentication
