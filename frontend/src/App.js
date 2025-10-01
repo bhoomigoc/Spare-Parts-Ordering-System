@@ -243,12 +243,10 @@ function App() {
   );
 }
 
-// Customer Catalog Component
+// Customer Catalog Component (Without Subcategories)
 const CustomerCatalog = () => {
   const [machines, setMachines] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
-  const [subcategories, setSubcategories] = useState([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [parts, setParts] = useState([]);
   const { cart, setCart } = React.useContext(CartContext);
 
@@ -274,23 +272,11 @@ const CustomerCatalog = () => {
     }
   };
 
-  const fetchSubcategories = async (machineId) => {
+  const fetchParts = async (machineId) => {
     try {
-      const response = await axios.get(`${API}/machines/${machineId}/subcategories`);
-      setSubcategories(response.data);
-      setSelectedMachine(machines.find(m => m.id === machineId));
-      setSelectedSubcategory(null);
-      setParts([]);
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
-    }
-  };
-
-  const fetchParts = async (subcategoryId) => {
-    try {
-      const response = await axios.get(`${API}/subcategories/${subcategoryId}/parts`);
+      const response = await axios.get(`${API}/machines/${machineId}/parts`);
       setParts(response.data);
-      setSelectedSubcategory(subcategories.find(s => s.id === subcategoryId));
+      setSelectedMachine(machines.find(m => m.id === machineId));
     } catch (error) {
       console.error('Error fetching parts:', error);
     }
@@ -310,7 +296,6 @@ const CustomerCatalog = () => {
         part_name: part.name,
         part_code: part.code,
         machine_name: selectedMachine.name,
-        subcategory_name: selectedSubcategory.name,
         quantity,
         price: part.price,
         image_url: part.image_url,
@@ -321,13 +306,11 @@ const CustomerCatalog = () => {
   };
 
   const goBack = () => {
-    if (selectedSubcategory) {
-      setSelectedSubcategory(null);
-      setParts([]);
-    } else if (selectedMachine) {
+    if (selectedMachine) {
       setSelectedMachine(null);
-      setSubcategories([]);
+      setParts([]);
     }
+  };
   };
 
   const switchMachine = (machineId) => {
