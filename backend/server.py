@@ -25,9 +25,11 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection with error handling
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/spare_parts_db')
+mongo_url = os.environ.get('MONGO_URL')
 if not mongo_url:
-    raise ValueError("MONGO_URL environment variable is required")
+    print("❌ MONGO_URL environment variable not found!")
+    print("Please set MONGO_URL in your environment variables.")
+    mongo_url = 'mongodb://localhost:27017/spare_parts_db'  # Fallback for development
 
 try:
     client = AsyncIOMotorClient(mongo_url)
