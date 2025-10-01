@@ -449,6 +449,14 @@ const CustomerCatalog = () => {
               <p className="text-gray-600 text-base sm:text-lg">Select a machine to browse available spare parts</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6" data-testid="machines-grid">
+              {console.log('🔍 Rendering machines grid. Machines count:', machines.length)}
+              {console.log('📊 Machines data:', machines)}
+              {machines.length === 0 && (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500">Loading machines... If this persists, there may be an API issue.</p>
+                  <p className="text-sm text-gray-400 mt-2">API URL: {API}/api/machines</p>
+                </div>
+              )}
               {machines.map((machine) => (
                 <Card 
                   key={machine.id} 
