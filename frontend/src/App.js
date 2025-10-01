@@ -1777,6 +1777,22 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   };
 
   const handleEditPart = async () => {
+    // Validation for required fields
+    if (!editingItem.name || editingItem.name.trim() === '') {
+      toast.error('Part name is required');
+      return;
+    }
+    
+    if (!editingItem.price || parseFloat(editingItem.price) <= 0) {
+      toast.error('Valid price is required');
+      return;
+    }
+    
+    if (!editingItem.machine_ids || editingItem.machine_ids.length === 0) {
+      toast.error('At least one machine must be selected');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('adminToken');
       await axios.put(`${API}/admin/parts/${editingItem.id}`, {
