@@ -306,9 +306,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Multiple Machine Support for Parts"
-    - "Inline Price Update Endpoint"
-    - "Backward Compatibility with Legacy Parts"
+    - "Admin Orders Data Structure for PDF Generation"
+    - "Form Validation and Backend Data Handling"
+    - "Image upload functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
