@@ -1995,7 +1995,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const handleAddMachine = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/api/admin/machines`, newMachine, {
+      await axios.post(`${API}/admin/machines`, newMachine, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2012,7 +2012,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const handleEditMachine = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/api/admin/machines/${editingItem.id}`, {
+      await axios.put(`${API}/admin/machines/${editingItem.id}`, {
         name: editingItem.name,
         description: editingItem.description,
         image_url: editingItem.image_url
