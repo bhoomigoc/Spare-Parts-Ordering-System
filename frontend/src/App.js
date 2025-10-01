@@ -1965,7 +1965,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const savePriceEdit = async (partId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/parts/${partId}/price?price=${parseFloat(newPrice)}`, {}, {
+      await axios.put(`${API}/api/admin/parts/${partId}/price?price=${parseFloat(newPrice)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
