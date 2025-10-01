@@ -1039,6 +1039,8 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       // For desktop - direct download
       pdf.save(fileName);
     }
+  };
+  
   const groupedItems = getGroupedCartItems();
 
   return (
