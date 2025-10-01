@@ -893,7 +893,7 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       console.log('🚀 Submitting order:', orderData);
       console.log('📍 API URL:', `${API}/orders`);
       
-      const response = await axios.post(`${API}/orders`, orderData, {
+      const response = await axios.post(`${API}/api/orders`, orderData, {
         headers: {
           'Content-Type': 'application/json'
         },
