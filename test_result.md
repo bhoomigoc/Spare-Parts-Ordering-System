@@ -255,6 +255,18 @@ backend:
         agent: "testing"
         comment: "TESTED: ✅ ALL 9 CUSTOMER SECTION TESTS PASSED! ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ Machine listing endpoint working (GET /api/machines) - retrieved 4 machines: Pellet Mill 560, Pellet Machine 780, Turbo Hammer Mill, Hammer Mill G3600. ✅ Parts by machine with new structure working (GET /api/machines/{id}/parts) - all parts have machine_ids array for multiple machine support. ✅ Universal parts support verified - found Universal Bearing, testing, test, Test Part, bearing 3320100 appearing across multiple machines. ✅ Order creation with new customer fields working (POST /api/orders) - successfully accepts company, gst_number, delivery_address fields in customer_info. ✅ Multiple machine support fully functional - parts correctly appear in multiple machines' parts lists. Customer section backend is fully operational and ready for frontend integration."
 
+  - task: "Order Submission with Recent Fixes"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TESTED: ✅ ALL 7 ORDER SUBMISSION TESTS PASSED! ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ OrderItem model correctly works without subcategory_name field - orders created successfully without this field. ✅ CustomerInfo model accepts new fields (gst_number, delivery_address) - verified in created orders. ✅ Order creation doesn't fail due to email issues - email notifications handled gracefully (skip when credentials not configured). ✅ Backend handles updated data structure from frontend perfectly. ✅ Multiple order scenarios tested: new format, minimal customer info, email handling, multiple items. ✅ Verified exact order structure from review request works correctly. Order submission functionality with recent fixes is fully operational."
+
 frontend:
   - task: "Machine Edit/Delete functionality"
     implemented: true
