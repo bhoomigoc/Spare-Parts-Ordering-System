@@ -470,13 +470,10 @@ class BackendTester:
         try:
             # Create a simple test image file in memory
             import io
-            from PIL import Image
             
-            # Create a simple 100x100 red image
-            img = Image.new('RGB', (100, 100), color='red')
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
-            img_bytes.seek(0)
+            # Create a simple fake PNG file (minimal PNG header)
+            png_header = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\nIDATx\x9cc\xf8\x00\x00\x00\x01\x00\x01\x00\x00\x00\x00IEND\xaeB`\x82'
+            img_bytes = io.BytesIO(png_header)
             
             # Prepare multipart form data
             files = {'file': ('test_image.png', img_bytes, 'image/png')}
