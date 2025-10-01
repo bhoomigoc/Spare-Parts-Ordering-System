@@ -465,6 +465,249 @@ class BackendTester:
             self.log_test("Backward Compatibility", False, f"Exception occurred: {str(e)}")
             return False
     
+    def test_image_upload_fix(self):
+        """Test 11: CRITICAL - Image upload returns correct URLs with /api/uploads/ prefix"""
+        try:
+            # Create a simple test image file in memory
+            import io
+            from PIL import Image
+            
+            # Create a simple 100x100 red image
+            img = Image.new('RGB', (100, 100), color='red')
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+            
+            # Prepare multipart form data
+            files = {'file': ('test_image.png', img_bytes, 'image/png')}
+            
+            # Make request using requests directly for file upload
+            url = f"{BACKEND_URL}/admin/upload-image"
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            response = self.session.post(url, files=files, headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                image_url = data.get("image_url", "")
+                
+                # Check if URL has correct /api/uploads/ prefix
+                if image_url.startswith("/api/uploads/"):
+                    self.log_test("Image Upload Fix", True, f"Image upload returns correct URL: {image_url}")
+                    
+                    # Test if the image can be served
+                    serve_response = self.make_request("GET", image_url.replace("/api", ""))
+                    if serve_response.status_code == 200:
+                        self.log_test("Image Serve Test", True, f"Image can be served via {image_url}")
+                        return True
+                    else:
+                        self.log_test("Image Serve Test", False, f"Cannot serve image: status {serve_response.status_code}")
+                        return False
+                else:
+                    self.log_test("Image Upload Fix", False, f"Image URL missing /api/uploads/ prefix: {image_url}")
+                    return False
+            else:
+                self.log_test("Image Upload Fix", False, f"Upload failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Image Upload Fix", False, f"Exception occurred: {str(e)}")
+            return False
+    
+    def test_form_validation_fixes(self, machines):
+        """Test 12: CRITICAL - Form validation for part creation"""
+        if not machines:
+            self.log_test("Form Validation", False, "No machines available for validation testing")
+            return False
+        
+        machine_id = machines[0]["id"]
+        
+        # Test 1: Empty part name should fail
+        try:
+            invalid_data = {
+                "machine_ids": [machine_id],
+                "name": "",  # Empty name
+                "code": "TEST-001",
+                "description": "Test part",
+                "price": 100.0
+            }
+            
+            response = self.make_request("POST", "/admin/parts", data=invalid_data, auth_required=True)
+            
+            if response.status_code == 422:  # Validation error
+                self.log_test("Validation - Empty Name", True, "Empty part name correctly rejected")
+            else:
+                self.log_test("Validation - Empty Name", False, f"Empty name not rejected: status {response.status_code}")
+        except Exception as e:
+            self.log_test("Validation - Empty Name", False, f"Exception occurred: {str(e)}")
+        
+        # Test 2: Zero price should fail
+        try:
+            invalid_data = {
+                "machine_ids": [machine_id],
+                "name": "Test Part",
+                "code": "TEST-002",
+                "description": "Test part",
+                "price": 0.0  # Zero price
+            }
+            
+            response = self.make_request("POST", "/admin/parts", data=invalid_data, auth_required=True)
+            
+            if response.status_code == 422:  # Validation error
+                self.log_test("Validation - Zero Price", True, "Zero price correctly rejected")
+            else:
+                self.log_test("Validation - Zero Price", False, f"Zero price not rejected: status {response.status_code}")
+        except Exception as e:
+            self.log_test("Validation - Zero Price", False, f"Exception occurred: {str(e)}")
+        
+        # Test 3: Negative price should fail
+        try:
+            invalid_data = {
+                "machine_ids": [machine_id],
+                "name": "Test Part",
+                "code": "TEST-003",
+                "description": "Test part",
+                "price": -100.0  # Negative price
+            }
+            
+            response = self.make_request("POST", "/admin/parts", data=invalid_data, auth_required=True)
+            
+            if response.status_code == 422:  # Validation error
+                self.log_test("Validation - Negative Price", True, "Negative price correctly rejected")
+            else:
+                self.log_test("Validation - Negative Price", False, f"Negative price not rejected: status {response.status_code}")
+        except Exception as e:
+            self.log_test("Validation - Negative Price", False, f"Exception occurred: {str(e)}")
+        
+        # Test 4: No machines selected should fail
+        try:
+            invalid_data = {
+                "machine_ids": [],  # Empty machine list
+                "name": "Test Part",
+                "code": "TEST-004",
+                "description": "Test part",
+                "price": 100.0
+            }
+            
+            response = self.make_request("POST", "/admin/parts", data=invalid_data, auth_required=True)
+            
+            if response.status_code == 422:  # Validation error
+                self.log_test("Validation - No Machines", True, "Empty machine list correctly rejected")
+            else:
+                self.log_test("Validation - No Machines", False, f"Empty machine list not rejected: status {response.status_code}")
+        except Exception as e:
+            self.log_test("Validation - No Machines", False, f"Exception occurred: {str(e)}")
+        
+        # Test 5: Valid data should succeed
+        try:
+            valid_data = {
+                "machine_ids": [machine_id],
+                "name": "Valid Test Part",
+                "code": "VALID-001",
+                "description": "Valid test part",
+                "price": 150.0
+            }
+            
+            response = self.make_request("POST", "/admin/parts", data=valid_data, auth_required=True)
+            
+            if response.status_code == 200:
+                part = response.json()
+                created_part_id = part.get("id")
+                self.log_test("Validation - Valid Data", True, f"Valid part creation succeeded: {created_part_id}")
+                
+                # Clean up - delete the test part
+                if created_part_id:
+                    self.make_request("DELETE", f"/admin/parts/{created_part_id}", auth_required=True)
+                
+                return True
+            else:
+                self.log_test("Validation - Valid Data", False, f"Valid data rejected: status {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Validation - Valid Data", False, f"Exception occurred: {str(e)}")
+            return False
+    
+    def test_simplified_catalog_data(self):
+        """Test 13: CRITICAL - Simplified catalog data fetching without subcategories"""
+        try:
+            # Test GET /api/machines (should work without auth)
+            response = self.make_request("GET", "/machines")
+            
+            if response.status_code == 200:
+                machines = response.json()
+                if isinstance(machines, list) and len(machines) > 0:
+                    self.log_test("Simplified Catalog - Machines", True, f"Retrieved {len(machines)} machines without auth")
+                    
+                    # Test GET /api/parts (should work with auth and return parts with machine_ids)
+                    parts_response = self.make_request("GET", "/parts", auth_required=True)
+                    
+                    if parts_response.status_code == 200:
+                        parts = parts_response.json()
+                        if isinstance(parts, list) and len(parts) > 0:
+                            # Check that all parts have machine_ids
+                            parts_with_machine_ids = 0
+                            for part in parts:
+                                if "machine_ids" in part and isinstance(part["machine_ids"], list):
+                                    parts_with_machine_ids += 1
+                            
+                            if parts_with_machine_ids == len(parts):
+                                self.log_test("Simplified Catalog - Parts", True, f"All {len(parts)} parts have machine_ids array")
+                                return True
+                            else:
+                                self.log_test("Simplified Catalog - Parts", False, f"Some parts missing machine_ids: {parts_with_machine_ids}/{len(parts)}")
+                                return False
+                        else:
+                            self.log_test("Simplified Catalog - Parts", False, "No parts found or invalid format")
+                            return False
+                    else:
+                        self.log_test("Simplified Catalog - Parts", False, f"Parts endpoint failed: status {parts_response.status_code}")
+                        return False
+                else:
+                    self.log_test("Simplified Catalog - Machines", False, "No machines found or invalid format")
+                    return False
+            else:
+                self.log_test("Simplified Catalog - Machines", False, f"Machines endpoint failed: status {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_test("Simplified Catalog Data", False, f"Exception occurred: {str(e)}")
+            return False
+    
+    def test_required_field_validation(self, machines):
+        """Test 14: CRITICAL - Required field validation for part creation and editing"""
+        if not machines:
+            self.log_test("Required Field Validation", False, "No machines available for testing")
+            return False
+        
+        machine_id = machines[0]["id"]
+        
+        # Test missing required fields one by one
+        required_fields = ["name", "code", "description", "price", "machine_ids"]
+        
+        for field in required_fields:
+            try:
+                # Create valid data
+                test_data = {
+                    "machine_ids": [machine_id],
+                    "name": "Test Part",
+                    "code": "TEST-REQ-001",
+                    "description": "Test description",
+                    "price": 100.0
+                }
+                
+                # Remove the field being tested
+                if field in test_data:
+                    del test_data[field]
+                
+                response = self.make_request("POST", "/admin/parts", data=test_data, auth_required=True)
+                
+                if response.status_code == 422:  # Validation error expected
+                    self.log_test(f"Required Field - {field}", True, f"Missing {field} correctly rejected")
+                else:
+                    self.log_test(f"Required Field - {field}", False, f"Missing {field} not rejected: status {response.status_code}")
+            except Exception as e:
+                self.log_test(f"Required Field - {field}", False, f"Exception occurred: {str(e)}")
+        
+        return True
+    
     def run_all_tests(self):
         """Run all backend tests"""
         print("=" * 80)
