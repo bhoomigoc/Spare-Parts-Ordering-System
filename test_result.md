@@ -105,6 +105,18 @@
 user_problem_statement: "Fix the broken admin dashboard functionality in the Bhoomi Enterprises Spare Parts Ordering System. The admin panel's Edit/Delete buttons for machines, categories, and parts are not working, the Bulk Add page has an empty machine dropdown, and email notifications need to be implemented."
 
 backend:
+  - task: "Machine Loading Debug - Backend Health and Data Verification"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "MACHINE LOADING DEBUG COMPLETE: ✅ ALL 10 TESTS PASSED! ✅ Backend health verified - responding correctly via machines endpoint. ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ Machines endpoint working perfectly (GET /api/machines) - retrieved 4 machines: Pellet Mill 560, Pellet Machine 780, Turbo Hammer Mill, Hammer Mill G3600. ✅ All machines have complete data structure with id, name, description, image_url, created_at fields. ✅ Machine data integrity verified - all 4 machines properly stored with valid data types. ✅ Machine-parts relationship working perfectly - found 23 parts across all 4 machines with valid machine_ids arrays. ✅ Parts endpoint working (GET /api/machines/{id}/parts) for all machines. The backend is fully operational for machine loading functionality."
+
   - task: "Admin Orders Data Structure for PDF Generation"
     implemented: true
     working: true
