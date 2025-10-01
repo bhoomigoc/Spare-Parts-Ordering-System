@@ -1502,21 +1502,122 @@ const OrderViewDialog = ({ order }) => {
   );
 };
 
-// Enhanced Orders Tab Component
+// Enhanced Orders Tab Component with Filtering and Sorting
 const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF, viewOrder }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  // Filter orders by customer name or company
+  const filteredOrders = orders.filter(order => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      order.customer_info.name.toLowerCase().includes(searchLower) ||
+      (order.customer_info.company && order.customer_info.company.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Sort filtered orders
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch (sortBy) {
+      case 'date':
+        aVal = new Date(a.created_at);
+        bVal = new Date(b.created_at);
+        break;
+      case 'value':
+        aVal = a.total_amount;
+        bVal = b.total_amount;
+        break;
+      case 'customer':
+        aVal = a.customer_info.name.toLowerCase();
+        bVal = b.customer_info.name.toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+    
+    if (sortOrder === 'asc') {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
   return (
     <div data-testid="orders-section">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Customer Orders</h2>
+        <h2 className="text-xl font-bold text-gray-900">Customer Orders ({orders.length})</h2>
         <Button onClick={fetchOrders} variant="outline" data-testid="refresh-orders">
           Refresh
         </Button>
       </div>
+
+      {/* Filters and Sort Controls */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex-1">
+              <Label>Filter by Customer</Label>
+              <Input
+                placeholder="Search customer name or company..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-4">
+              <div>
+                <Label>Sort by</Label>
+                <select
+                  className="border rounded px-3 py-2"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="date">Date</option>
+                  <option value="value">Order Value</option>
+                  <option value="customer">Customer Name</option>
+                </select>
+              </div>
+              <div>
+                <Label>Order</Label>
+                <select
+                  className="border rounded px-3 py-2"
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                >
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-gray-600 mt-2">
+              Showing {sortedOrders.length} of {orders.length} orders
+            </p>
+          )}
+        </CardContent>
+      </Card>
       
-      {orders.length === 0 ? (
+      {sortedOrders.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
-            <p className="text-gray-500">No orders found</p>
+            {searchTerm ? (
+              <div>
+                <p className="text-gray-500">No orders found matching "{searchTerm}"</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => setSearchTerm('')}
+                  className="mt-2"
+                >
+                  Clear search
+                </Button>
+              </div>
+            ) : (
+              <p className="text-gray-500">No orders found</p>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -1535,7 +1636,7 @@ const OrdersTab = ({ orders, fetchOrders, downloadOrderPDF, viewOrder }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {sortedOrders.map((order) => (
                 <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
                   <TableCell className="font-mono text-sm">
                     {order.id.slice(0, 8)}...
