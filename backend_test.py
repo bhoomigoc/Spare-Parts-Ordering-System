@@ -794,6 +794,121 @@ class BackendTester:
             self.log_test("Admin Orders Data Structure", False, f"Exception occurred: {str(e)}")
             return False
 
+    def test_backend_health(self):
+        """Test 1: Backend health check - GET /"""
+        try:
+            # Test the root health endpoint (not /api/)
+            health_url = BACKEND_URL.replace("/api", "")
+            response = self.session.get(health_url)
+            
+            if response.status_code == 200:
+                data = response.json()
+                status = data.get("status", "")
+                message = data.get("message", "")
+                
+                if status == "healthy":
+                    self.log_test("Backend Health Check", True, f"Backend is healthy: {message}")
+                    return True
+                else:
+                    self.log_test("Backend Health Check", False, f"Backend status not healthy: {status}")
+                    return False
+            else:
+                self.log_test("Backend Health Check", False, f"Health check failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Backend Health Check", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_machine_loading_debug(self):
+        """Debug machine loading issue - comprehensive machine data verification"""
+        print("\n🔍 MACHINE LOADING DEBUG TESTS")
+        print("-" * 50)
+        
+        # Step 1: Test backend health
+        health_ok = self.test_backend_health()
+        
+        # Step 2: Initialize sample data
+        sample_data_ok = self.test_init_sample_data()
+        
+        # Step 3: Test machines endpoint
+        machines = self.test_get_machines()
+        machines_ok = len(machines) > 0
+        
+        # Step 4: Verify machine data structure
+        if machines_ok:
+            try:
+                print(f"\n📊 MACHINE DATA ANALYSIS:")
+                print(f"   Total machines found: {len(machines)}")
+                
+                for i, machine in enumerate(machines):
+                    print(f"   Machine {i+1}:")
+                    print(f"     - ID: {machine.get('id', 'MISSING')}")
+                    print(f"     - Name: {machine.get('name', 'MISSING')}")
+                    print(f"     - Description: {machine.get('description', 'MISSING')}")
+                    print(f"     - Image URL: {machine.get('image_url', 'None')}")
+                    print(f"     - Created At: {machine.get('created_at', 'MISSING')}")
+                    
+                    # Check required fields
+                    required_fields = ['id', 'name', 'description']
+                    missing_fields = [field for field in required_fields if not machine.get(field)]
+                    
+                    if missing_fields:
+                        self.log_test(f"Machine {i+1} Data Structure", False, f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test(f"Machine {i+1} Data Structure", True, f"All required fields present")
+                
+                # Test if machines can be fetched by parts endpoint
+                if len(machines) > 0:
+                    machine_id = machines[0]['id']
+                    parts_response = self.make_request("GET", f"/machines/{machine_id}/parts")
+                    
+                    if parts_response.status_code == 200:
+                        parts = parts_response.json()
+                        self.log_test("Machine Parts Endpoint", True, f"Machine {machine_id} has {len(parts)} parts")
+                    else:
+                        self.log_test("Machine Parts Endpoint", False, f"Failed to get parts for machine {machine_id}: status {parts_response.status_code}")
+                
+                return True
+                
+            except Exception as e:
+                self.log_test("Machine Data Analysis", False, f"Exception during analysis: {str(e)}")
+                return False
+        else:
+            self.log_test("Machine Data Analysis", False, "No machines available for analysis")
+            return False
+
+    def run_machine_loading_debug(self):
+        """Run focused machine loading debug tests"""
+        print("=" * 80)
+        print("MACHINE LOADING DEBUG - Backend API Testing")
+        print("Debugging machine loading issue on homepage")
+        print("=" * 80)
+        
+        # Run the debug tests
+        debug_success = self.test_machine_loading_debug()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("MACHINE LOADING DEBUG SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for result in self.test_results if result["success"])
+        total = len(self.test_results)
+        
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {total - passed}")
+        
+        if total - passed > 0:
+            print("\nFAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"  ❌ {result['test']}: {result['message']}")
+        else:
+            print("\n✅ All machine loading debug tests passed!")
+        
+        return passed == total
+
     def run_all_tests(self):
         """Run all backend tests focusing on admin section fixes"""
         print("=" * 80)
