@@ -1019,55 +1019,6 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       // For desktop - direct download
       pdf.save(fileName);
     }
-  };
-    pdf.line(120, yPosition, 195, yPosition);
-    yPosition += 8;
-    
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, 'normal');
-    pdf.text('Subtotal:', 135, yPosition);
-    pdf.text(`₹${order.total_amount.toLocaleString()}`, 165, yPosition);
-    
-    yPosition += 10;
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Total Amount:', 135, yPosition);
-    pdf.text(`₹${order.total_amount.toLocaleString()}`, 165, yPosition);
-    
-    // Terms and Conditions
-    yPosition += 20;
-    pdf.setFontSize(8);
-    pdf.setFont(undefined, 'normal');
-    pdf.text('Terms & Conditions:', 20, yPosition);
-    yPosition += 5;
-    pdf.text('• GST and Packaging & Forwarding charges will be added extra', 20, yPosition);
-    yPosition += 4;
-    pdf.text('• Prices are subject to change without prior notice', 20, yPosition);
-    yPosition += 4;
-    pdf.text('• Payment terms as per company policy', 20, yPosition);
-    
-    // Footer
-    yPosition += 15;
-    pdf.setFontSize(9);
-    pdf.setFont(undefined, 'italic');
-    pdf.text('Thank you for your business!', 20, yPosition);
-    pdf.text('Bhoomi Enterprises', 140, yPosition);
-    
-    // Save PDF
-    const fileName = `Bhoomi-Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
-    pdf.save(fileName);
-    
-    // Generate WhatsApp link
-    const whatsappMessage = `Order Summary from Bhoomi Enterprises\n\nOrder ID: ${order.id}\nCustomer: ${order.customer_info.name}\nTotal: ₹${order.total_amount.toLocaleString()}\n\nItems:\n${order.items.map(item => `• ${item.part_name} (${item.quantity}x)`).join('\n')}\n\n*GST and P&F charges will be added extra`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
-    
-    setTimeout(() => {
-      const shareChoice = window.confirm('Order PDF downloaded! Would you like to share via WhatsApp?');
-      if (shareChoice) {
-        window.open(whatsappUrl, '_blank');
-      }
-    }, 1000);
-  };
-
   const groupedItems = getGroupedCartItems();
 
   return (
