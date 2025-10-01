@@ -1078,29 +1078,24 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
         <div className="border-t pt-4 mt-4">
           <h4 className="font-semibold mb-4">Order Summary:</h4>
           <div className="max-h-60 overflow-y-auto">
-            {Object.entries(groupedItems).map(([machineName, categories]) => (
+            {Object.entries(groupedItems).map(([machineName, items]) => (
               <div key={machineName} className="mb-4">
                 <h5 className="font-semibold text-gray-800">{machineName}</h5>
-                {Object.entries(categories).map(([categoryName, items]) => (
-                  <div key={categoryName} className="ml-4 mb-2">
-                    <h6 className="font-medium text-gray-700">{categoryName}</h6>
-                    <div className="ml-4 space-y-1 text-sm">
-                      {items.map((item) => (
-                        <div key={item.part_id} className="flex justify-between">
-                          <span>{item.part_name} × {item.quantity}</span>
-                          <span>₹{(item.price * item.quantity).toLocaleString()}</span>
-                        </div>
-                      ))}
+                <div className="ml-4 space-y-1 text-sm">
+                  {items.map((item) => (
+                    <div key={item.part_id} className="flex justify-between">
+                      <span>{item.part_name} × {item.quantity}</span>
+                      <span>Rs {(item.price * item.quantity).toLocaleString()}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ))}
           </div>
           <div className="border-t mt-2 pt-2">
             <div className="flex justify-between font-bold">
               <span>Total:</span>
-              <span>₹{calculateTotal().toLocaleString()}</span>
+              <span>Rs {calculateTotal().toLocaleString()}</span>
             </div>
             <p className="text-xs text-gray-500 mt-1">
               * GST and Packaging & Forwarding charges will be added extra
