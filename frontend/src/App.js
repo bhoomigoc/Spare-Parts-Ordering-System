@@ -1938,7 +1938,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API}/api/admin/upload-image`, formData, {
+      const response = await axios.post(`${API}/admin/upload-image`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
