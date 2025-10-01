@@ -231,8 +231,10 @@ const ContactPage = () => {
 };
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://quickparts-1.preview.emergentagent.com/api';
 const API = BACKEND_URL;
+
+console.log('🔍 API URL configured as:', API);
 
 // Cart Context for persistence across pages
 const CartContext = React.createContext();
