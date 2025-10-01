@@ -667,59 +667,52 @@ const CartPage = () => {
                             />
                           </div>
                         </div>
-                            
-                            {/* Quantity Controls */}
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => updateCartQuantity(item.part_id, item.quantity - 1)}
-                                data-testid={`decrease-quantity-${item.part_id}`}
-                              >
-                                -
-                              </Button>
-                              <Input 
-                                type="number" 
-                                value={item.quantity} 
-                                onChange={(e) => updateCartQuantity(item.part_id, parseInt(e.target.value) || 0)}
-                                className="w-16 text-center"
-                                data-testid={`quantity-input-${item.part_id}`}
-                              />
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => updateCartQuantity(item.part_id, item.quantity + 1)}
-                                data-testid={`increase-quantity-${item.part_id}`}
-                              >
-                                +
-                              </Button>
-                            </div>
-                            
-                            {/* Total Price */}
-                            <div className="text-right font-semibold">
-                              ₹{(item.price * item.quantity).toLocaleString()}
-                            </div>
-                          </div>
-                        ))}
                         
-                        {/* Specifications Section */}
-                        <div className="mt-4">
-                          <Label className="text-sm font-medium text-gray-700">Please Mention Specifications, If any:</Label>
-                          {items.map((item) => (
-                            <Textarea 
-                              key={`comment-${item.part_id}`}
-                              placeholder={`Specifications for ${item.part_name}...`}
-                              value={item.comment}
-                              onChange={(e) => updateCartComment(item.part_id, e.target.value)}
-                              className="mt-2 resize-none"
-                              rows={2}
-                              data-testid={`comment-input-${item.part_id}`}
-                            />
-                          ))}
+                        {/* Quantity Controls */}
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateCartQuantity(item.part_id, item.quantity - 1)}
+                            data-testid={`decrease-quantity-${item.part_id}`}
+                          >
+                            -
+                          </Button>
+                          <Input 
+                            type="number" 
+                            value={item.quantity} 
+                            onChange={(e) => updateCartQuantity(item.part_id, parseInt(e.target.value) || 0)}
+                            className="w-16 text-center"
+                            data-testid={`quantity-input-${item.part_id}`}
+                          />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateCartQuantity(item.part_id, item.quantity + 1)}
+                            data-testid={`increase-quantity-${item.part_id}`}
+                          >
+                            +
+                          </Button>
                         </div>
+                        
+                        {/* Total Price */}
+                        <div className="text-right font-semibold">
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </div>
+                        
+                        {/* Remove Button */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeFromCart(item.part_id)}
+                          className="text-red-600 hover:text-red-700"
+                          data-testid={`remove-item-${item.part_id}`}
+                        >
+                          Remove
+                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
