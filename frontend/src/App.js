@@ -849,7 +849,15 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       return;
     }
 
+    if (cart.length === 0) {
+      toast.error('Your cart is empty. Please add items before submitting.');
+      return;
+    }
+
     try {
+      // Show loading state
+      const loadingToast = toast.loading('Submitting your order...');
+      
       const orderData = {
         customer_info: {
           name: customerInfo.company, // Using company as name
@@ -864,16 +872,25 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
           part_name: item.part_name,
           part_code: item.part_code,
           machine_name: item.machine_name,
-          quantity: item.quantity,
-          price: item.price,
+          quantity: parseInt(item.quantity) || 1,
+          price: parseFloat(item.price) || 0,
           comment: item.comment || ''
         })),
-        total_amount: calculateTotal()
+        total_amount: parseFloat(calculateTotal())
       };
 
-      console.log('Submitting order:', orderData);
-      const response = await axios.post(`${API}/orders`, orderData);
-      console.log('Order response:', response.data);
+      console.log('🚀 Submitting order:', orderData);
+      console.log('📍 API URL:', `${API}/orders`);
+      
+      const response = await axios.post(`${API}/orders`, orderData, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000 // 30 second timeout
+      });
+      
+      console.log('✅ Order response:', response.data);
+      toast.dismiss(loadingToast);
       
       // Generate professional PDF with images
       generateProfessionalPDF(response.data, getGroupedCartItems());
@@ -891,10 +908,36 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       setValidationErrors({});
       setShowCheckout(false);
       
-      toast.success('Order submitted successfully! PDF downloaded.');
+      toast.success('✅ Order submitted successfully! PDF downloaded.');
+      
     } catch (error) {
-      console.error('Error submitting order:', error);
-      toast.error(`Failed to submit order: ${error.response?.data?.detail || error.message}`);
+      console.error('❌ Order submission error:', error);
+      
+      let errorMessage = 'Failed to submit order. ';
+      
+      if (error.response) {
+        // Server responded with an error
+        console.error('Server error response:', error.response.data);
+        console.error('Status:', error.response.status);
+        
+        if (error.response.status === 422) {
+          errorMessage += 'Please check all form fields are filled correctly.';
+        } else if (error.response.status === 500) {
+          errorMessage += 'Server error. Please try again.';
+        } else {
+          errorMessage += error.response.data?.detail || `Server returned status ${error.response.status}`;
+        }
+      } else if (error.request) {
+        // Network error
+        console.error('Network error:', error.request);
+        errorMessage += 'Network error. Please check your internet connection.';
+      } else {
+        // Other error
+        console.error('Error:', error.message);
+        errorMessage += error.message;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
