@@ -2111,7 +2111,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/api/admin/parts/${editingItem.id}`, {
+      await axios.put(`${API}/admin/parts/${editingItem.id}`, {
         machine_ids: editingItem.machine_ids,
         name: editingItem.name,
         code: editingItem.code,
