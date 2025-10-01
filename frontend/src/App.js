@@ -1245,14 +1245,12 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('adminToken');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [machinesRes, subcategoriesRes, partsRes] = await Promise.all([
+      const [machinesRes, partsRes] = await Promise.all([
         axios.get(`${API}/machines`),
-        axios.get(`${API}/subcategories`, { headers }),
         axios.get(`${API}/parts`, { headers })
       ]);
       
       setMachines(machinesRes.data);
-      setSubcategories(subcategoriesRes.data || []);
       setParts(partsRes.data || []);
     } catch (error) {
       console.error('Error fetching catalog data:', error);
