@@ -1263,57 +1263,114 @@ const AdminDashboard = () => {
   };
 
   const downloadOrderPDF = (order) => {
-    const pdf = new jsPDF();
-    
-    // Professional PDF generation (same as customer PDF but with admin formatting)
-    pdf.setFontSize(20);
-    pdf.text('Bhoomi Enterprises - Admin Order View', 20, 30);
-    
-    pdf.setFontSize(12);
-    pdf.text(`Order ID: ${order.id}`, 20, 45);
-    pdf.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 20, 55);
-    pdf.text(`Status: ${order.status}`, 20, 65);
-    
-    // Customer Info
-    pdf.setFontSize(14);
-    pdf.text('Customer Information:', 20, 85);
-    pdf.setFontSize(10);
-    pdf.text(`Name: ${order.customer_info.name}`, 20, 95);
-    pdf.text(`Phone: ${order.customer_info.phone}`, 20, 105);
-    if (order.customer_info.email) pdf.text(`Email: ${order.customer_info.email}`, 20, 115);
-    if (order.customer_info.company) pdf.text(`Company: ${order.customer_info.company}`, 20, 125);
-    
-    // Items Table
-    const tableData = order.items.map(item => [
-      item.part_name,
-      item.part_code,
-      item.machine_name,
-      item.subcategory_name,
-      item.quantity.toString(),
-      `₹${item.price.toLocaleString()}`,
-      `₹${(item.price * item.quantity).toLocaleString()}`,
-      item.comment || '-'
-    ]);
-    
-    pdf.autoTable({
-      startY: 140,
-      head: [['Part Name', 'Code', 'Machine', 'Category', 'Qty', 'Price', 'Total', 'Specifications']],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [59, 130, 246] }
-    });
-    
-    // Total
-    const finalY = pdf.lastAutoTable.finalY + 10;
-    pdf.setFontSize(14);
-    pdf.text(`Grand Total: ₹${order.total_amount.toLocaleString()}`, 20, finalY);
-    pdf.setFontSize(8);
-    pdf.text('* GST and Packaging & Forwarding charges will be added extra', 20, finalY + 10);
-    
-    // Save PDF
-    const fileName = `Admin-Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
-    pdf.save(fileName);
+    try {
+      const pdf = new jsPDF();
+      
+      // Company Header with Logo
+      pdf.setFontSize(24);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Bhoomi Enterprises', 20, 30);
+      
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.text('Admin Order Report', 20, 45);
+      
+      // Order Information
+      pdf.setFontSize(10);
+      pdf.text(`Order ID: ${order.id}`, 120, 45);
+      pdf.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 120, 55);
+      pdf.text(`Status: ${order.status}`, 120, 65);
+      
+      // Customer Information Box
+      pdf.rect(15, 75, 180, 40);
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Customer Information', 20, 85);
+      
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      pdf.text(`Name: ${order.customer_info.name}`, 20, 95);
+      pdf.text(`Phone: ${order.customer_info.phone}`, 20, 102);
+      if (order.customer_info.email) pdf.text(`Email: ${order.customer_info.email}`, 20, 109);
+      if (order.customer_info.company) pdf.text(`Company: ${order.customer_info.company}`, 120, 95);
+      
+      let yPosition = 130;
+      
+      // Professional Table Header
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(15, yPosition, 180, 8, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(9);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Item Details', 20, yPosition + 5);
+      pdf.text('Code', 80, yPosition + 5);
+      pdf.text('Qty', 110, yPosition + 5);
+      pdf.text('Rate (Rs)', 130, yPosition + 5);
+      pdf.text('Amount (Rs)', 160, yPosition + 5);
+      
+      yPosition += 12;
+      pdf.setTextColor(0, 0, 0);
+      
+      // Items
+      order.items.forEach(item => {
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(8);
+        
+        // Item name (with text wrapping)
+        const itemText = item.part_name;
+        pdf.text(itemText.length > 35 ? itemText.substring(0, 35) + '...' : itemText, 20, yPosition);
+        pdf.text(item.part_code || 'N/A', 80, yPosition);
+        pdf.text(item.quantity.toString(), 115, yPosition);
+        pdf.text(item.price ? item.price.toLocaleString() : '0', 135, yPosition);
+        pdf.text(item.price && item.quantity ? (item.price * item.quantity).toLocaleString() : '0', 165, yPosition);
+        
+        yPosition += 5;
+        
+        // Add specifications if provided
+        if (item.comment) {
+          pdf.setFontSize(7);
+          pdf.setFont(undefined, 'italic');
+          pdf.text(`Spec: ${item.comment.substring(0, 60)}`, 20, yPosition);
+          yPosition += 4;
+        }
+        
+        yPosition += 2; // Small gap between items
+      });
+      
+      // Summary Section
+      yPosition += 10;
+      pdf.line(120, yPosition, 195, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      pdf.text('Subtotal:', 135, yPosition);
+      pdf.text(`Rs ${order.total_amount ? order.total_amount.toLocaleString() : '0'}`, 165, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Total Amount:', 135, yPosition);
+      pdf.text(`Rs ${order.total_amount ? order.total_amount.toLocaleString() : '0'}`, 165, yPosition);
+      
+      // Terms and Conditions
+      yPosition += 20;
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, 'normal');
+      pdf.text('Terms & Conditions:', 20, yPosition);
+      yPosition += 5;
+      pdf.text('• GST and Packaging & Forwarding charges will be added extra', 20, yPosition);
+      yPosition += 4;
+      pdf.text('• This is an admin copy for internal use', 20, yPosition);
+      
+      // Save PDF
+      const fileName = `Admin-Order-${order.id.slice(0, 8)}-${order.customer_info.name.replace(/\s+/g, '-')}.pdf`;
+      pdf.save(fileName);
+      
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    }
   };
 
   const viewOrder = (order) => {
