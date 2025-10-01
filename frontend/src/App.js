@@ -2029,7 +2029,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`${API}/admin/machines/${id}`, {
+      await axios.delete(`${API}/api/admin/machines/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
