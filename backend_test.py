@@ -1017,6 +1017,16 @@ class BackendTester:
         return passed == total
 
 if __name__ == "__main__":
+    import sys
+    
     tester = BackendTester()
-    success = tester.run_all_tests()
+    
+    # Check if we should run machine loading debug or full tests
+    if len(sys.argv) > 1 and sys.argv[1] == "debug":
+        print("Running Machine Loading Debug Tests...")
+        success = tester.run_machine_loading_debug()
+    else:
+        print("Running Full Backend Tests...")
+        success = tester.run_all_tests()
+    
     sys.exit(0 if success else 1)
