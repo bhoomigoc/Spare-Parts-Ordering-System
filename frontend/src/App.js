@@ -872,19 +872,26 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
     pdf.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 120, 55);
     
     // Customer Information Box
-    pdf.rect(15, 65, 180, 40);
+    pdf.rect(15, 65, 180, 50);
     pdf.setFontSize(12);
     pdf.setFont(undefined, 'bold');
     pdf.text('Customer Information', 20, 75);
     
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
-    pdf.text(`Name: ${order.customer_info.name}`, 20, 85);
+    pdf.text(`Company: ${order.customer_info.company || 'N/A'}`, 20, 85);
     pdf.text(`Phone: ${order.customer_info.phone}`, 20, 92);
-    if (order.customer_info.email) pdf.text(`Email: ${order.customer_info.email}`, 20, 99);
-    if (order.customer_info.company) pdf.text(`Company: ${order.customer_info.company}`, 120, 85);
+    pdf.text(`Email: ${order.customer_info.email || 'N/A'}`, 20, 99);
+    if (order.customer_info.gst_number) pdf.text(`GST: ${order.customer_info.gst_number}`, 120, 85);
+    if (order.customer_info.delivery_address) {
+      pdf.text('Address:', 120, 92);
+      pdf.text(order.customer_info.delivery_address.substring(0, 30), 120, 99);
+      if (order.customer_info.delivery_address.length > 30) {
+        pdf.text(order.customer_info.delivery_address.substring(30, 60), 120, 106);
+      }
+    }
     
-    let yPosition = 120;
+    let yPosition = 130;
     
     // Professional Table Header
     pdf.setFillColor(59, 130, 246);
@@ -895,14 +902,14 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
     pdf.text('Item Details', 20, yPosition + 5);
     pdf.text('Code', 80, yPosition + 5);
     pdf.text('Qty', 110, yPosition + 5);
-    pdf.text('Rate (₹)', 130, yPosition + 5);
-    pdf.text('Amount (₹)', 160, yPosition + 5);
+    pdf.text('Rate (Rs)', 130, yPosition + 5);
+    pdf.text('Amount (Rs)', 160, yPosition + 5);
     
     yPosition += 12;
     pdf.setTextColor(0, 0, 0);
     
-    // Grouped Items with Professional Formatting
-    Object.entries(groupedItems).forEach(([machineName, categories]) => {
+    // Grouped Items by Machine Only (no subcategories)
+    Object.entries(groupedItems).forEach(([machineName, items]) => {
       // Machine header
       pdf.setFillColor(240, 240, 240);
       pdf.rect(15, yPosition, 180, 6, 'F');
@@ -911,43 +918,108 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       pdf.text(machineName, 20, yPosition + 4);
       yPosition += 10;
       
-      Object.entries(categories).forEach(([categoryName, items]) => {
-        // Category subheader
-        pdf.setFontSize(9);
-        pdf.setFont(undefined, 'italic');
-        pdf.text(`  ${categoryName}`, 25, yPosition);
-        yPosition += 6;
+      // Items
+      items.forEach(item => {
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(8);
         
-        // Items
-        items.forEach(item => {
-          pdf.setFont(undefined, 'normal');
-          pdf.setFontSize(8);
-          
-          // Item name (with text wrapping)
-          const itemText = `    ${item.part_name}`;
-          pdf.text(itemText.length > 35 ? itemText.substring(0, 35) + '...' : itemText, 20, yPosition);
-          pdf.text(item.part_code, 80, yPosition);
-          pdf.text(item.quantity.toString(), 115, yPosition);
-          pdf.text(item.price.toLocaleString(), 135, yPosition);
-          pdf.text((item.price * item.quantity).toLocaleString(), 165, yPosition);
-          
-          yPosition += 5;
-          
-          // Add specifications if provided
-          if (item.comment) {
-            pdf.setFontSize(7);
-            pdf.setFont(undefined, 'italic');
-            pdf.text(`      Spec: ${item.comment.substring(0, 60)}`, 20, yPosition);
-            yPosition += 4;
-          }
-        });
-        yPosition += 3;
+        // Item name (with text wrapping)
+        const itemText = `  ${item.part_name}`;
+        pdf.text(itemText.length > 35 ? itemText.substring(0, 35) + '...' : itemText, 20, yPosition);
+        pdf.text(item.part_code, 80, yPosition);
+        pdf.text(item.quantity.toString(), 115, yPosition);
+        pdf.text(item.price.toLocaleString(), 135, yPosition);
+        pdf.text((item.price * item.quantity).toLocaleString(), 165, yPosition);
+        
+        yPosition += 5;
+        
+        // Add specifications if provided
+        if (item.comment && item.comment.trim()) {
+          pdf.setFontSize(7);
+          pdf.setFont(undefined, 'italic');
+          pdf.text(`    Spec: ${item.comment.substring(0, 60)}`, 20, yPosition);
+          yPosition += 4;
+        }
       });
       yPosition += 5;
     });
     
     // Summary Section
     yPosition += 10;
+    pdf.line(120, yPosition, 195, yPosition);
+    yPosition += 8;
+    
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Subtotal:', 135, yPosition);
+    pdf.text(`Rs ${order.total_amount.toLocaleString()}`, 165, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Total Amount:', 135, yPosition);
+    pdf.text(`Rs ${order.total_amount.toLocaleString()}`, 165, yPosition);
+    
+    // Terms and Conditions
+    yPosition += 20;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text('Terms & Conditions:', 20, yPosition);
+    yPosition += 5;
+    pdf.text('• GST and Packaging & Forwarding charges will be added extra', 20, yPosition);
+    yPosition += 4;
+    pdf.text('• Prices are subject to change without prior notice', 20, yPosition);
+    yPosition += 4;
+    pdf.text('• Payment terms as per company policy', 20, yPosition);
+    
+    // Bank Details Section
+    yPosition += 15;
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Bank Details:', 20, yPosition);
+    
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    yPosition += 5;
+    pdf.text('Account Name: Bhoomi Enterprises Pvt. Ltd.', 20, yPosition);
+    yPosition += 4;
+    pdf.text('Account Number: 5869048563', 20, yPosition);
+    yPosition += 4;
+    pdf.text('Bank Name: Central Bank of India', 20, yPosition);
+    yPosition += 4;
+    pdf.text('Branch Name: SATI branch, Vidisha', 20, yPosition);
+    yPosition += 4;
+    pdf.text('IFSC Code: CBIN0283144', 20, yPosition);
+    
+    // Footer
+    yPosition += 15;
+    pdf.setFontSize(7);
+    pdf.text('Thank you for your business!', 20, yPosition);
+    
+    // Save or share based on device
+    const fileName = `Bhoomi-Order-${order.id.slice(0, 8)}-${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`;
+    
+    // Check if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // For mobile - create shareable blob
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Create WhatsApp share message
+      const message = `Order from Bhoomi Enterprises%0A%0AOrder ID: ${order.id}%0ATotal: Rs ${order.total_amount.toLocaleString()}%0ADate: ${new Date().toLocaleDateString()}%0A%0APDF: ${pdfUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${message}`;
+      
+      // Open WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
+      // Also download PDF
+      pdf.save(fileName);
+    } else {
+      // For desktop - direct download
+      pdf.save(fileName);
+    }
+  };
     pdf.line(120, yPosition, 195, yPosition);
     yPosition += 8;
     
