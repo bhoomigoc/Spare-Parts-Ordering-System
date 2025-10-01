@@ -285,7 +285,7 @@ const CustomerCatalog = () => {
 
   const initializeSampleData = async () => {
     try {
-      const response = await axios.post(`${API}/admin/init-sample-data`);
+      const response = await axios.post(`${API}/api/admin/init-sample-data`);
       console.log('✅ Sample data initialized:', response.data);
     } catch (error) {
       console.log('⚠️ Sample data already exists or error initializing:', error.message);
