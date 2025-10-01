@@ -873,8 +873,8 @@ class BackendTester:
         # Separate priority test results
         priority_tests = [
             "Image Upload Fix", "Image Serve Test", "Admin Orders Data Structure",
-            "Validation - Empty Name", "Validation - Zero Price", "Validation - Negative Price",
-            "Validation - No Machines", "Validation - Valid Data", "Simplified Catalog - Machines",
+            "Backend Accepts Empty Name", "Backend Accepts Zero Price", "Backend Accepts Negative Price",
+            "Backend Accepts Empty Machine List", "Valid Part Creation", "Simplified Catalog - Machines",
             "Simplified Catalog - Parts"
         ]
         
