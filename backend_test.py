@@ -708,11 +708,80 @@ class BackendTester:
         
         return True
     
+    def test_admin_orders_data_structure(self):
+        """Test 15: CRITICAL - Admin orders endpoint and data structure for PDF generation"""
+        try:
+            response = self.make_request("GET", "/admin/orders", auth_required=True)
+            
+            if response.status_code == 200:
+                orders = response.json()
+                if isinstance(orders, list):
+                    if len(orders) == 0:
+                        self.log_test("Admin Orders Data Structure", True, "No orders found - endpoint working but empty")
+                        return True
+                    
+                    # Check first order has all required fields for PDF generation
+                    order = orders[0]
+                    required_fields = ["id", "customer_info", "items", "total_amount", "created_at", "status"]
+                    missing_fields = []
+                    
+                    for field in required_fields:
+                        if field not in order:
+                            missing_fields.append(field)
+                    
+                    if missing_fields:
+                        self.log_test("Admin Orders Data Structure", False, f"Order missing required fields: {missing_fields}")
+                        return False
+                    
+                    # Check customer_info structure
+                    customer_info = order.get("customer_info", {})
+                    customer_required = ["name", "phone"]
+                    customer_missing = []
+                    
+                    for field in customer_required:
+                        if field not in customer_info:
+                            customer_missing.append(field)
+                    
+                    if customer_missing:
+                        self.log_test("Admin Orders Data Structure", False, f"Customer info missing fields: {customer_missing}")
+                        return False
+                    
+                    # Check items structure
+                    items = order.get("items", [])
+                    if not isinstance(items, list) or len(items) == 0:
+                        self.log_test("Admin Orders Data Structure", False, "Order has no items or invalid items format")
+                        return False
+                    
+                    # Check first item structure
+                    item = items[0]
+                    item_required = ["part_id", "part_name", "part_code", "quantity", "price"]
+                    item_missing = []
+                    
+                    for field in item_required:
+                        if field not in item:
+                            item_missing.append(field)
+                    
+                    if item_missing:
+                        self.log_test("Admin Orders Data Structure", False, f"Order item missing fields: {item_missing}")
+                        return False
+                    
+                    self.log_test("Admin Orders Data Structure", True, f"Retrieved {len(orders)} orders with complete data structure for PDF generation")
+                    return True
+                else:
+                    self.log_test("Admin Orders Data Structure", False, "Invalid response format - not a list")
+                    return False
+            else:
+                self.log_test("Admin Orders Data Structure", False, f"Failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_test("Admin Orders Data Structure", False, f"Exception occurred: {str(e)}")
+            return False
+
     def run_all_tests(self):
-        """Run all backend tests"""
+        """Run all backend tests focusing on admin section fixes"""
         print("=" * 80)
-        print("BACKEND API TESTING - Bhoomi Enterprises Spare Parts System")
-        print("Testing Updated Multiple Machine Support Features")
+        print("BACKEND API TESTING - Admin Section Fixes")
+        print("Testing Image Upload, Form Validation, and Order Data Structure")
         print("=" * 80)
         
         # Test 1: Initialize sample data
@@ -726,25 +795,50 @@ class BackendTester:
         # Test 3: Get machines
         machines = self.test_get_machines()
         
-        # Test 4: Get subcategories
+        # PRIORITY TESTS FOR ADMIN SECTION FIXES:
+        
+        # Test 4: CRITICAL - Image Upload Fix
+        print("\n🔍 PRIORITY TEST: Image Upload Fix")
+        self.test_image_upload_fix()
+        
+        # Test 5: CRITICAL - Admin Orders Data Structure for PDF
+        print("\n🔍 PRIORITY TEST: Admin Orders Data Structure")
+        self.test_admin_orders_data_structure()
+        
+        # Test 6: CRITICAL - Form Validation
+        print("\n🔍 PRIORITY TEST: Form Validation")
+        self.test_form_validation_fixes(machines)
+        
+        # Test 7: CRITICAL - Required Field Validation
+        print("\n🔍 PRIORITY TEST: Required Field Validation")
+        self.test_required_field_validation(machines)
+        
+        # Test 8: CRITICAL - Simplified Catalog Data
+        print("\n🔍 PRIORITY TEST: Simplified Catalog Endpoints")
+        self.test_simplified_catalog_data()
+        
+        # Additional comprehensive tests
+        print("\n📋 COMPREHENSIVE BACKEND TESTS:")
+        
+        # Test 9: Get subcategories
         subcategories = self.test_get_subcategories()
         
-        # Test 5: Get parts
+        # Test 10: Get parts
         parts = self.test_get_parts()
         
-        # Test 6: Machine CRUD
+        # Test 11: Machine CRUD
         self.test_machine_crud()
         
-        # Test 7: Subcategory CRUD
+        # Test 12: Subcategory CRUD
         self.test_subcategory_crud(machines)
         
-        # Test 8: NEW - Part CRUD with multiple machine support
+        # Test 13: Part CRUD with multiple machine support
         self.test_part_crud_multiple_machines(machines)
         
-        # Test 9: NEW - Get parts by machine endpoint
+        # Test 14: Get parts by machine endpoint
         self.test_parts_by_machine(machines)
         
-        # Test 10: NEW - Backward compatibility testing
+        # Test 15: Backward compatibility testing
         self.test_backward_compatibility()
         
         # Summary
@@ -759,8 +853,31 @@ class BackendTester:
         print(f"Passed: {passed}")
         print(f"Failed: {total - passed}")
         
+        # Separate priority test results
+        priority_tests = [
+            "Image Upload Fix", "Image Serve Test", "Admin Orders Data Structure",
+            "Validation - Empty Name", "Validation - Zero Price", "Validation - Negative Price",
+            "Validation - No Machines", "Validation - Valid Data", "Simplified Catalog - Machines",
+            "Simplified Catalog - Parts"
+        ]
+        
+        priority_passed = 0
+        priority_total = 0
+        
+        print(f"\n🎯 PRIORITY ADMIN FIXES TEST RESULTS:")
+        for result in self.test_results:
+            if any(priority in result["test"] for priority in priority_tests):
+                priority_total += 1
+                if result["success"]:
+                    priority_passed += 1
+                    print(f"  ✅ {result['test']}")
+                else:
+                    print(f"  ❌ {result['test']}: {result['message']}")
+        
+        print(f"\nPriority Tests: {priority_passed}/{priority_total} passed")
+        
         if total - passed > 0:
-            print("\nFAILED TESTS:")
+            print("\nALL FAILED TESTS:")
             for result in self.test_results:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['message']}")
