@@ -243,6 +243,18 @@ backend:
         agent: "testing"
         comment: "TESTED: Email notification system is properly implemented in send_order_notification() function. Code handles SMTP authentication and email composition correctly. Cannot test actual email sending without SMTP credentials (SMTP_USERNAME and SMTP_PASSWORD are empty in .env)."
 
+  - task: "Customer Section Backend Health Check"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TESTED: ✅ ALL 9 CUSTOMER SECTION TESTS PASSED! ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ Machine listing endpoint working (GET /api/machines) - retrieved 4 machines: Pellet Mill 560, Pellet Machine 780, Turbo Hammer Mill, Hammer Mill G3600. ✅ Parts by machine with new structure working (GET /api/machines/{id}/parts) - all parts have machine_ids array for multiple machine support. ✅ Universal parts support verified - found Universal Bearing, testing, test, Test Part, bearing 3320100 appearing across multiple machines. ✅ Order creation with new customer fields working (POST /api/orders) - successfully accepts company, gst_number, delivery_address fields in customer_info. ✅ Multiple machine support fully functional - parts correctly appear in multiple machines' parts lists. Customer section backend is fully operational and ready for frontend integration."
+
 frontend:
   - task: "Machine Edit/Delete functionality"
     implemented: true
