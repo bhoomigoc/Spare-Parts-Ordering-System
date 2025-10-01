@@ -1,30 +1,30 @@
 # Web Framework
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+fastapi>=0.104.1,<0.105.0
+uvicorn[standard]>=0.24.0,<0.25.0
 
 # Database
-motor==3.3.2
-pymongo==4.6.0
+motor>=3.3.2,<4.0.0
+pymongo>=4.6.0,<5.0.0
 
 # Authentication & Security
-bcrypt==4.1.2
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+bcrypt>=4.1.2,<5.0.0
+python-jose[cryptography]>=3.3.0,<4.0.0
+passlib[bcrypt]>=1.7.4,<2.0.0
 
 # File Handling
-python-multipart==0.0.6
-Pillow==10.1.0
+python-multipart>=0.0.6,<1.0.0
+Pillow>=10.1.0,<11.0.0
 
 # Email
-aiosmtplib==3.0.1
+aiosmtplib>=3.0.1,<4.0.0
 
 # Environment & Configuration
-python-decouple==3.8
-pydantic==2.5.0
-pydantic-settings==2.1.0
+python-decouple>=3.8,<4.0.0
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
 
 # Date/Time handling
-python-dateutil==2.8.2
+python-dateutil>=2.8.2,<3.0.0
 
 # HTTP Client
-httpx==0.25.2
+httpx>=0.25.2,<1.0.0
