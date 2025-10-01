@@ -231,8 +231,8 @@ const ContactPage = () => {
 };
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API = BACKEND_URL;
 
 // Cart Context for persistence across pages
 const CartContext = React.createContext();
