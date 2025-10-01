@@ -17,6 +17,7 @@ import { Toaster } from './components/ui/sonner';
 // Contact Information
 const contactInfo = {
   company: "Bhoomi Enterprises Private Limited",
+  phone: "7898986808", // Main contact number
   branches: [
     {
       name: "Madhya Pradesh Branch",
