@@ -46,6 +46,33 @@ app = FastAPI(title="Spare Parts Ordering API")
 # Health check endpoint
 @app.get("/")
 async def health_check():
+    return {
+        "status": "healthy", 
+        "message": "Bhoomi Enterprises API is running",
+        "environment": os.environ.get("ENVIRONMENT", "development")
+    }
+
+# Startup event
+@app.on_event("startup")
+async def startup_event():
+    try:
+        # Test database connection
+        await client.admin.command('ping')
+        print("✅ Database connection successful")
+        
+        # Ensure upload directory exists
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        print(f"✅ Upload directory created: {UPLOAD_DIR}")
+        
+        print("✅ Backend startup complete")
+        
+    except Exception as e:
+        print(f"❌ Startup error: {e}")
+        # Don't raise - let the app start anyway for debugging
+
+# Health check endpoint
+@app.get("/")
+async def health_check():
     return {"status": "healthy", "message": "Bhoomi Enterprises API is running"}
 
 # Startup event
