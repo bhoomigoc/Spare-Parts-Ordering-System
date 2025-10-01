@@ -1387,7 +1387,7 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await axios.get(`${API}/admin/orders`, {
+      const response = await axios.get(`${API}/api/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders(response.data);
