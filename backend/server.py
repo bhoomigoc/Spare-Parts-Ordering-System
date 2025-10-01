@@ -157,7 +157,6 @@ class OrderItem(BaseModel):
     part_name: str
     part_code: str
     machine_name: str
-    subcategory_name: str
     quantity: int
     price: float
     comment: str = ""
@@ -167,6 +166,8 @@ class CustomerInfo(BaseModel):
     phone: str
     email: Optional[str] = None
     company: Optional[str] = None
+    gst_number: Optional[str] = None
+    delivery_address: Optional[str] = None
 
 class Order(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
