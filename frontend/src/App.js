@@ -1734,6 +1734,22 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   };
 
   const handleAddPart = async () => {
+    // Validation for required fields
+    if (!newPart.name || newPart.name.trim() === '') {
+      toast.error('Part name is required');
+      return;
+    }
+    
+    if (!newPart.price || parseFloat(newPart.price) <= 0) {
+      toast.error('Valid price is required');
+      return;
+    }
+    
+    if (!newPart.machine_ids || newPart.machine_ids.length === 0) {
+      toast.error('At least one machine must be selected');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('adminToken');
       await axios.post(`${API}/admin/parts`, {
