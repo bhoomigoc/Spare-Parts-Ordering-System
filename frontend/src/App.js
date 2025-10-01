@@ -851,8 +851,23 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
 
     try {
       const orderData = {
-        customer_info: customerInfo,
-        items: cart,
+        customer_info: {
+          name: customerInfo.company, // Using company as name
+          company: customerInfo.company,
+          phone: customerInfo.phone,
+          email: customerInfo.email,
+          gst_number: customerInfo.gst_number,
+          delivery_address: customerInfo.delivery_address
+        },
+        items: cart.map(item => ({
+          part_id: item.part_id,
+          part_name: item.part_name,
+          part_code: item.part_code,
+          machine_name: item.machine_name,
+          quantity: item.quantity,
+          price: item.price,
+          comment: item.comment || ''
+        })),
         total_amount: calculateTotal()
       };
 
@@ -863,11 +878,20 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       // Generate professional PDF with images
       generateProfessionalPDF(response.data, getGroupedCartItems());
       
-      // Clear cart
+      // Clear cart and form
       setCart([]);
+      setCustomerInfo({
+        name: '',
+        phone: '',
+        email: '',
+        company: '',
+        gst_number: '',
+        delivery_address: ''
+      });
+      setValidationErrors({});
       setShowCheckout(false);
       
-      toast.success('Order submitted successfully!');
+      toast.success('Order submitted successfully! PDF downloaded.');
     } catch (error) {
       console.error('Error submitting order:', error);
       toast.error(`Failed to submit order: ${error.response?.data?.detail || error.message}`);
