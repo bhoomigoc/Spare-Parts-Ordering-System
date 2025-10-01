@@ -300,15 +300,13 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "1.1"
-  test_sequence: 2
+  version: "1.2"
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Admin Orders Data Structure for PDF Generation"
-    - "Form Validation and Backend Data Handling"
-    - "Image upload functionality"
+    - "Customer Section Backend Health Check"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -324,3 +322,5 @@ agent_communication:
     message: "UPDATED MULTIPLE MACHINE TESTING COMPLETE: ✅ All new multiple machine functionality working perfectly! ✅ Parts can belong to multiple machines using machine_ids array. ✅ Inline price update endpoint working correctly. ✅ Backward compatibility verified - legacy parts automatically converted. ✅ All 17 comprehensive backend tests passed. ✅ Created and verified multi-machine test part successfully. The updated admin CRUD functionality with multiple machine support is fully functional."
   - agent: "testing"
     message: "ADMIN SECTION FIXES TESTING COMPLETE: ✅ ALL 32 BACKEND TESTS PASSED! ✅ Image upload fix verified - returns correct URLs with /api/uploads/ prefix. ✅ Admin orders data structure complete for PDF generation (21 orders with all required fields). ✅ Form validation working - backend accepts data, frontend should validate. ✅ Required field validation working properly. ✅ Simplified catalog endpoints working without auth. ✅ All CRUD operations, multiple machine support, and backward compatibility verified. The admin section backend is fully functional."
+  - agent: "testing"
+    message: "CUSTOMER SECTION BACKEND HEALTH CHECK COMPLETE: ✅ ALL 9 CUSTOMER SECTION TESTS PASSED! ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ Machine listing endpoint working (GET /api/machines) - retrieved 4 machines. ✅ Parts by machine with new structure working (GET /api/machines/{id}/parts) - all parts have machine_ids array. ✅ Universal parts support verified - found parts belonging to multiple machines. ✅ Order creation with new customer fields working (POST /api/orders) - accepts company, gst_number, delivery_address fields. ✅ Multiple machine support fully functional - parts appear correctly across multiple machines. Customer section backend is fully operational and ready for frontend integration."
