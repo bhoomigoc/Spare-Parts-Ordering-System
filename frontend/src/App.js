@@ -1300,7 +1300,7 @@ const AdminLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API}/api/admin/login`, credentials);
+      const response = await axios.post(`${API}/admin/login`, credentials);
       localStorage.setItem('adminToken', response.data.access_token);
       navigate('/admin/dashboard');
     } catch (error) {
