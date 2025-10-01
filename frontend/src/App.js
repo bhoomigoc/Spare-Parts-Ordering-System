@@ -1406,8 +1406,8 @@ const AdminDashboard = () => {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [machinesRes, partsRes] = await Promise.all([
-        axios.get(`${API}/machines`),
-        axios.get(`${API}/parts`, { headers })
+        axios.get(`${API}/api/machines`),
+        axios.get(`${API}/api/parts`, { headers })
       ]);
       
       setMachines(machinesRes.data);
