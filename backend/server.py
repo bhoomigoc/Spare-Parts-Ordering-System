@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
 import hashlib
-import jwt
+from jose import jwt
 import shutil
 from io import BytesIO
 import pandas as pd
