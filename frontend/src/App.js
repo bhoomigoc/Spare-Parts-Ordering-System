@@ -2629,7 +2629,7 @@ const BulkAddParts = () => {
       const token = localStorage.getItem('adminToken');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const machinesRes = await axios.get(`${API}/machines`);
+      const machinesRes = await axios.get(`${API}/api/machines`);
       setMachines(machinesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
