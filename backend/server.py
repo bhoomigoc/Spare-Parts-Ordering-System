@@ -15,7 +15,7 @@ import hashlib
 from jose import jwt
 import shutil
 from io import BytesIO
-import pandas as pd
+# import pandas as pd  # Unused import - removed
 import base64
 import smtplib
 from email.mime.text import MIMEText
