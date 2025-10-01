@@ -46,15 +46,15 @@ api_router = APIRouter(prefix="/api")
 
 # Security
 security = HTTPBearer()
-JWT_SECRET = "spare_parts_secret_key_2024"
+JWT_SECRET = os.environ.get('JWT_SECRET', 'spare_parts_secret_key_2024')
 
-# File upload directory
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# File upload directory (Render uses ephemeral storage)
+UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', '/tmp/uploads'))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Email configuration
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_SERVER = os.environ.get('SMTP_SERVER', '')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 NOTIFICATION_EMAIL = "office.bhoomigroup@gmail.com"
