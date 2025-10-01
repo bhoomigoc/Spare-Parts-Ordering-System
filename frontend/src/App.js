@@ -276,24 +276,35 @@ const CustomerCatalog = () => {
   const { cart, setCart } = React.useContext(CartContext);
 
   useEffect(() => {
-    fetchMachines();
-    initializeSampleData();
+    const loadData = async () => {
+      await initializeSampleData();
+      await fetchMachines();
+    };
+    loadData();
   }, []);
 
   const initializeSampleData = async () => {
     try {
-      await axios.post(`${API}/admin/init-sample-data`);
+      const response = await axios.post(`${API}/admin/init-sample-data`);
+      console.log('✅ Sample data initialized:', response.data);
     } catch (error) {
-      console.log('Sample data already exists or error initializing');
+      console.log('⚠️ Sample data already exists or error initializing:', error.message);
     }
   };
 
   const fetchMachines = async () => {
     try {
+      console.log('🔍 Fetching machines from:', `${API}/machines`);
       const response = await axios.get(`${API}/machines`);
+      console.log('✅ Machines fetched:', response.data.length, 'machines');
       setMachines(response.data);
     } catch (error) {
-      console.error('Error fetching machines:', error);
+      console.error('❌ Error fetching machines:', error);
+      // Try to fetch again after a delay
+      setTimeout(() => {
+        console.log('🔄 Retrying to fetch machines...');
+        fetchMachines();
+      }, 2000);
     }
   };
 
