@@ -629,8 +629,8 @@ const CartPage = () => {
                 className="h-12 object-contain"
               />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
-                <p className="text-gray-600 text-sm">Your selected items</p>
+                <h1 className="text-2xl font-bold text-gray-900">Cart</h1>
+                <p className="text-gray-600 text-sm">Review your items</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
