@@ -372,8 +372,6 @@ const CustomerCatalog = () => {
           <button 
             onClick={() => {
               setSelectedMachine(null);
-              setSelectedSubcategory(null);
-              setSubcategories([]);
               setParts([]);
             }} 
             className="hover:text-blue-600 transition-colors"
@@ -384,27 +382,15 @@ const CustomerCatalog = () => {
           {selectedMachine && (
             <>
               <span>/</span>
-              <button 
-                onClick={goBack}
-                className="hover:text-blue-600 transition-colors"
-                data-testid="machine-breadcrumb"
-              >
+              <span className="text-gray-900 font-medium" data-testid="machine-breadcrumb">
                 {selectedMachine.name}
-              </button>
-            </>
-          )}
-          {selectedSubcategory && (
-            <>
-              <span>/</span>
-              <span className="text-gray-900 font-medium" data-testid="subcategory-breadcrumb">
-                {selectedSubcategory.name}
               </span>
             </>
           )}
         </div>
 
         {/* Machine Switcher (when viewing parts) */}
-        {selectedSubcategory && (
+        {selectedMachine && (
           <div className="bg-white p-4 rounded-lg shadow mb-6">
             <p className="text-sm text-gray-600 mb-3">Switch Machine Type:</p>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -413,24 +399,10 @@ const CustomerCatalog = () => {
                   key={machine.id}
                   variant={machine.id === selectedMachine.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => switchMachine(machine.id)}
+                  onClick={() => fetchParts(machine.id)}
                   data-testid={`switch-machine-${machine.id}`}
                 >
                   {machine.name}
-                </Button>
-              ))}
-            </div>
-            <p className="text-sm text-gray-600 mb-3">Switch Category:</p>
-            <div className="flex flex-wrap gap-2">
-              {subcategories.map((subcat) => (
-                <Button
-                  key={subcat.id}
-                  variant={subcat.id === selectedSubcategory.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => fetchParts(subcat.id)}
-                  data-testid={`switch-category-${subcat.id}`}
-                >
-                  {subcat.name}
                 </Button>
               ))}
             </div>
@@ -450,7 +422,7 @@ const CustomerCatalog = () => {
                 <Card 
                   key={machine.id} 
                   className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
-                  onClick={() => fetchSubcategories(machine.id)}
+                  onClick={() => fetchParts(machine.id)}
                   data-testid={`machine-card-${machine.id}`}
                 >
                   <CardHeader className="p-3 sm:p-6">
@@ -472,56 +444,28 @@ const CustomerCatalog = () => {
           </div>
         )}
 
-        {selectedMachine && !selectedSubcategory && (
+        {selectedMachine && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedMachine.name} - Categories</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedMachine.name} - Parts</h2>
                 <p className="text-gray-600">{selectedMachine.description}</p>
               </div>
               <Button onClick={goBack} variant="outline" data-testid="back-to-machines">
                 ← Back to Machines
               </Button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="subcategories-grid">
-              {subcategories.map((subcategory) => (
-                <Card 
-                  key={subcategory.id} 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
-                  onClick={() => fetchParts(subcategory.id)}
-                  data-testid={`subcategory-card-${subcategory.id}`}
-                >
-                  <CardHeader className="p-3 sm:p-6">
-                    <CardTitle className="text-base sm:text-lg text-center">{subcategory.name}</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm text-center">{subcategory.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-6">
-                    <div className="w-full h-16 sm:h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400 text-xl sm:text-2xl">⚙️</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {selectedSubcategory && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedSubcategory.name} - Parts</h2>
-                <p className="text-gray-600">{selectedSubcategory.description}</p>
+            {parts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="parts-grid">
+                {parts.map((part) => (
+                  <PartCard key={part.id} part={part} onAddToCart={addToCart} />
+                ))}
               </div>
-              <Button onClick={goBack} variant="outline" data-testid="back-to-subcategories">
-                ← Back to Categories
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-testid="parts-grid">
-              {parts.map((part) => (
-                <PartCard key={part.id} part={part} onAddToCart={addToCart} />
-              ))}
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No parts available for this machine.</p>
+              </div>
+            )}
           </div>
         )}
       </div>
