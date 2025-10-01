@@ -7,7 +7,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.7
       - key: MONGO_URL
         value: # You'll set this in Render dashboard
       - key: JWT_SECRET
