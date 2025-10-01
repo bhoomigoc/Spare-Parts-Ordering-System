@@ -1207,7 +1207,7 @@ Date: ${new Date().toLocaleDateString()}
               id="gst_number"
               value={customerInfo.gst_number}
               onChange={(e) => setCustomerInfo({...customerInfo, gst_number: e.target.value.toUpperCase()})}
-              placeholder="Enter 15-character GST number"
+              placeholder="Enter 15 alphanumeric characters (e.g. ABCD1234567890E)"
               data-testid="customer-gst-input"
               className={validationErrors.gst_number ? 'border-red-500' : ''}
             />
