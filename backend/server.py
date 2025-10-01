@@ -29,7 +29,7 @@ mongo_url = os.environ.get('MONGO_URL')
 if not mongo_url:
     print("❌ MONGO_URL environment variable not found!")
     print("Please set MONGO_URL in your environment variables.")
-    mongo_url = 'mongodb://localhost:27017/spare_parts_db'  # Fallback for development
+    raise ValueError("MONGO_URL environment variable is required for production deployment")
 
 try:
     client = AsyncIOMotorClient(mongo_url)
