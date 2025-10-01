@@ -576,12 +576,9 @@ const CartPage = () => {
     const grouped = {};
     cart.forEach(item => {
       if (!grouped[item.machine_name]) {
-        grouped[item.machine_name] = {};
+        grouped[item.machine_name] = [];
       }
-      if (!grouped[item.machine_name][item.subcategory_name]) {
-        grouped[item.machine_name][item.subcategory_name] = [];
-      }
-      grouped[item.machine_name][item.subcategory_name].push(item);
+      grouped[item.machine_name].push(item);
     });
     return grouped;
   };
