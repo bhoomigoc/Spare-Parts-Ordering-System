@@ -488,7 +488,7 @@ async def upload_image(file: UploadFile = File(...), admin: Admin = Depends(get_
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    return {"image_url": f"/uploads/{filename}"}
+    return {"image_url": f"/api/uploads/{filename}"}
 
 # Serve uploaded files
 @api_router.get("/uploads/{filename}")
