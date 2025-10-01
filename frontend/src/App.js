@@ -771,12 +771,61 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
     name: '',
     phone: '',
     email: '',
-    company: ''
+    company: '',
+    gst_number: '',
+    delivery_address: ''
   });
+  const [validationErrors, setValidationErrors] = useState({});
+
+  // Validation functions
+  const validateCompanyName = (name) => {
+    if (!name || name.trim() === '') return 'Company name is required';
+    if (!/^[A-Za-z0-9\s]+$/.test(name)) return 'Only alphabets, numbers, and spaces allowed';
+    return '';
+  };
+
+  const validateMobileNumber = (phone) => {
+    if (!phone) return 'Mobile number is required';
+    if (!/^[6-9]\d{9}$/.test(phone)) return 'Must be a valid 10-digit Indian mobile number starting with 6-9';
+    return '';
+  };
+
+  const validateGSTNumber = (gst) => {
+    if (!gst) return 'GST number is required';
+    if (!/^\d{2}[A-Z0-9]{10}[A-Z]{1}[Z]{1}\d{1}$/.test(gst)) return 'Invalid GST format (15 characters: 2 digits + 10 alphanumeric + 1 letter + Z + 1 digit)';
+    return '';
+  };
+
+  const validateDeliveryAddress = (address) => {
+    if (!address || address.trim() === '') return 'Delivery address is required';
+    if (address.trim().length < 10) return 'Address must be at least 10 characters';
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    if (!email) return 'Email address is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
+    return '';
+  };
+
+  const validateAllFields = () => {
+    const errors = {};
+    
+    errors.company = validateCompanyName(customerInfo.company);
+    errors.phone = validateMobileNumber(customerInfo.phone);
+    errors.gst_number = validateGSTNumber(customerInfo.gst_number);
+    errors.delivery_address = validateDeliveryAddress(customerInfo.delivery_address);
+    errors.email = validateEmail(customerInfo.email);
+    
+    setValidationErrors(errors);
+    
+    // Return true if no errors
+    return !Object.values(errors).some(error => error !== '');
+  };
 
   const handleSubmitOrder = async () => {
-    if (!customerInfo.name || !customerInfo.phone) {
-      toast.error('Please fill in required fields (Name and Phone)');
+    if (!validateAllFields()) {
+      toast.error('Please fix all validation errors before submitting');
       return;
     }
 
