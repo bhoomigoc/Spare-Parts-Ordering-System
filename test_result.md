@@ -330,7 +330,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Customer Section Backend Health Check"
+    - "Order Submission with Recent Fixes"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
