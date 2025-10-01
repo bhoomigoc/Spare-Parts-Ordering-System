@@ -812,7 +812,7 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
 
   const validateGSTNumber = (gst) => {
     if (!gst) return 'GST number is required';
-    if (!/^\d{2}[A-Z0-9]{10}[A-Z]{1}[Z]{1}\d{1}$/.test(gst)) return 'Invalid GST format (15 characters: 2 digits + 10 alphanumeric + 1 letter + Z + 1 digit)';
+    if (!/^[A-Za-z0-9]{15}$/.test(gst)) return 'GST number must be exactly 15 alphanumeric characters';
     return '';
   };
 
