@@ -2068,7 +2068,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/api/admin/parts`, {
+      await axios.post(`${API}/admin/parts`, {
         ...newPart,
         price: parseFloat(newPart.price)
       }, {
@@ -2696,7 +2696,7 @@ const BulkAddParts = () => {
           return;
         }
         
-        await axios.post(`${API}/api/admin/parts`, {
+        await axios.post(`${API}/admin/parts`, {
           ...part,
           price: parseFloat(part.price)
         }, {
