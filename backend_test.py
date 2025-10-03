@@ -1274,6 +1274,369 @@ class BackendTester:
         
         return passed == total
 
+    def test_persistent_storage_migration(self):
+        """Test persistent storage migration from /tmp/uploads to /app/backend/uploads"""
+        print("=" * 80)
+        print("PERSISTENT STORAGE MIGRATION TESTING")
+        print("Testing migration from /tmp/uploads to /app/backend/uploads")
+        print("=" * 80)
+        
+        # Step 1: Check current machine image URLs in database
+        machines = self.test_machine_image_database_check()
+        
+        # Step 2: Check current part image URLs in database  
+        parts = self.test_part_image_database_check()
+        
+        # Step 3: Test image serving endpoint with actual files
+        self.test_image_serving_with_actual_files()
+        
+        # Step 4: Test new upload process with persistent storage
+        self.test_new_upload_persistent_storage()
+        
+        return True
+
+    def test_machine_image_database_check(self):
+        """Check current machine image URLs in database and compare with actual files"""
+        try:
+            response = self.make_request("GET", "/machines")
+            
+            if response.status_code == 200:
+                machines = response.json()
+                if isinstance(machines, list):
+                    print(f"\n📊 MACHINE IMAGE DATABASE ANALYSIS:")
+                    print(f"   Total machines: {len(machines)}")
+                    
+                    # Files actually in /app/backend/uploads/
+                    actual_files = [
+                        "0df367b5-571b-4358-b32f-af97a1cedc87.png",
+                        "1a885e1e-2db8-45f7-a1e5-aca49ce9b924.jpg", 
+                        "2e5dd317-ed6c-4049-b964-c9c7eec2e8d6.jpg",
+                        "3a487bc7-13ae-4fe6-ac15-485240d954b8.webp",
+                        "7fecf2d0-dadf-44a4-aea2-7dc632da4371.webp",
+                        "b0b28552-0605-4e3d-8735-21b29b6a719d.jpg",
+                        "b9ad1a04-4536-45a6-b532-b1085a6c6b55.jpeg",
+                        "cdfc656d-cdd1-4f42-b6a6-223183620064.png",
+                        "d214a338-a57c-4fc2-afd9-5d23d77a1c4d.png",
+                        "f46ea96c-07a8-4ba2-926b-77dddb8d9842.webp",
+                        "f481a63f-e02a-4182-8779-d95afda356a1.webp"
+                    ]
+                    
+                    machines_with_images = 0
+                    matching_files = 0
+                    mismatched_files = 0
+                    
+                    for i, machine in enumerate(machines):
+                        machine_name = machine.get('name', 'Unknown')
+                        image_url = machine.get('image_url')
+                        
+                        if image_url:
+                            machines_with_images += 1
+                            print(f"   Machine {i+1} ({machine_name}):")
+                            print(f"     - Image URL: {image_url}")
+                            
+                            # Extract filename from URL
+                            if '/api/uploads/' in image_url:
+                                filename = image_url.split('/api/uploads/')[-1]
+                                if filename in actual_files:
+                                    matching_files += 1
+                                    print(f"     - File Status: ✅ EXISTS in /app/backend/uploads/")
+                                else:
+                                    mismatched_files += 1
+                                    print(f"     - File Status: ❌ NOT FOUND in /app/backend/uploads/")
+                            else:
+                                mismatched_files += 1
+                                print(f"     - File Status: ❌ INCORRECT URL FORMAT (missing /api/uploads/)")
+                        else:
+                            print(f"   Machine {i+1} ({machine_name}): No image URL")
+                    
+                    print(f"\n   Summary:")
+                    print(f"   - Machines with images: {machines_with_images}")
+                    print(f"   - Files matching database: {matching_files}")
+                    print(f"   - Files not found/mismatched: {mismatched_files}")
+                    print(f"   - Total files in directory: {len(actual_files)}")
+                    
+                    self.log_test("Machine Image Database Check", True, 
+                                f"Found {machines_with_images} machines with images, {matching_files} matching files, {mismatched_files} mismatched")
+                    return machines
+                else:
+                    self.log_test("Machine Image Database Check", False, "Invalid machines response format")
+                    return []
+            else:
+                self.log_test("Machine Image Database Check", False, f"Failed to get machines: status {response.status_code}")
+                return []
+        except Exception as e:
+            self.log_test("Machine Image Database Check", False, f"Exception occurred: {str(e)}")
+            return []
+
+    def test_part_image_database_check(self):
+        """Check current part image URLs in database and compare with actual files"""
+        try:
+            response = self.make_request("GET", "/parts", auth_required=True)
+            
+            if response.status_code == 200:
+                parts = response.json()
+                if isinstance(parts, list):
+                    print(f"\n📊 PART IMAGE DATABASE ANALYSIS:")
+                    print(f"   Total parts: {len(parts)}")
+                    
+                    # Files actually in /app/backend/uploads/
+                    actual_files = [
+                        "0df367b5-571b-4358-b32f-af97a1cedc87.png",
+                        "1a885e1e-2db8-45f7-a1e5-aca49ce9b924.jpg", 
+                        "2e5dd317-ed6c-4049-b964-c9c7eec2e8d6.jpg",
+                        "3a487bc7-13ae-4fe6-ac15-485240d954b8.webp",
+                        "7fecf2d0-dadf-44a4-aea2-7dc632da4371.webp",
+                        "b0b28552-0605-4e3d-8735-21b29b6a719d.jpg",
+                        "b9ad1a04-4536-45a6-b532-b1085a6c6b55.jpeg",
+                        "cdfc656d-cdd1-4f42-b6a6-223183620064.png",
+                        "d214a338-a57c-4fc2-afd9-5d23d77a1c4d.png",
+                        "f46ea96c-07a8-4ba2-926b-77dddb8d9842.webp",
+                        "f481a63f-e02a-4182-8779-d95afda356a1.webp"
+                    ]
+                    
+                    parts_with_images = 0
+                    matching_files = 0
+                    mismatched_files = 0
+                    
+                    for i, part in enumerate(parts[:10]):  # Show first 10 parts
+                        part_name = part.get('name', 'Unknown')
+                        image_url = part.get('image_url')
+                        
+                        if image_url:
+                            parts_with_images += 1
+                            print(f"   Part {i+1} ({part_name}):")
+                            print(f"     - Image URL: {image_url}")
+                            
+                            # Extract filename from URL
+                            if '/api/uploads/' in image_url:
+                                filename = image_url.split('/api/uploads/')[-1]
+                                if filename in actual_files:
+                                    matching_files += 1
+                                    print(f"     - File Status: ✅ EXISTS in /app/backend/uploads/")
+                                else:
+                                    mismatched_files += 1
+                                    print(f"     - File Status: ❌ NOT FOUND in /app/backend/uploads/")
+                            elif '/uploads/' in image_url:
+                                filename = image_url.split('/uploads/')[-1]
+                                if filename in actual_files:
+                                    matching_files += 1
+                                    print(f"     - File Status: ⚠️ EXISTS but WRONG URL FORMAT (missing /api)")
+                                else:
+                                    mismatched_files += 1
+                                    print(f"     - File Status: ❌ NOT FOUND and WRONG URL FORMAT")
+                            else:
+                                mismatched_files += 1
+                                print(f"     - File Status: ❌ INCORRECT URL FORMAT")
+                    
+                    if len(parts) > 10:
+                        print(f"   ... and {len(parts) - 10} more parts")
+                    
+                    # Count all parts with/without images
+                    total_with_images = sum(1 for part in parts if part.get('image_url'))
+                    total_without_images = len(parts) - total_with_images
+                    
+                    print(f"\n   Summary:")
+                    print(f"   - Parts with images: {total_with_images}")
+                    print(f"   - Parts without images: {total_without_images}")
+                    print(f"   - Files matching database (first 10): {matching_files}")
+                    print(f"   - Files not found/mismatched (first 10): {mismatched_files}")
+                    
+                    self.log_test("Part Image Database Check", True, 
+                                f"Found {total_with_images} parts with images, analyzed first 10 parts")
+                    return parts
+                else:
+                    self.log_test("Part Image Database Check", False, "Invalid parts response format")
+                    return []
+            else:
+                self.log_test("Part Image Database Check", False, f"Failed to get parts: status {response.status_code}")
+                return []
+        except Exception as e:
+            self.log_test("Part Image Database Check", False, f"Exception occurred: {str(e)}")
+            return []
+
+    def test_image_serving_with_actual_files(self):
+        """Test image serving endpoint with actual files in /app/backend/uploads/"""
+        try:
+            print(f"\n🔗 IMAGE SERVING WITH ACTUAL FILES:")
+            
+            # Test with actual files from the directory
+            test_files = [
+                "3a487bc7-13ae-4fe6-ac15-485240d954b8.webp",
+                "7fecf2d0-dadf-44a4-aea2-7dc632da4371.webp",
+                "1a885e1e-2db8-45f7-a1e5-aca49ce9b924.jpg",
+                "b9ad1a04-4536-45a6-b532-b1085a6c6b55.jpeg"
+            ]
+            
+            successful_serves = 0
+            failed_serves = 0
+            
+            for filename in test_files:
+                try:
+                    response = self.make_request("GET", f"/uploads/{filename}")
+                    
+                    print(f"   Testing: {filename}")
+                    print(f"   URL: {BACKEND_URL}/uploads/{filename}")
+                    print(f"   Status: {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        successful_serves += 1
+                        print(f"   Result: ✅ SUCCESS - File served correctly")
+                        
+                        # Check content type
+                        content_type = response.headers.get('content-type', 'unknown')
+                        print(f"   Content-Type: {content_type}")
+                    else:
+                        failed_serves += 1
+                        print(f"   Result: ❌ FAILED - Status {response.status_code}")
+                    
+                    print()
+                    
+                except Exception as e:
+                    failed_serves += 1
+                    print(f"   Result: ❌ EXCEPTION - {str(e)}")
+                    print()
+            
+            print(f"   Summary: {successful_serves} successful, {failed_serves} failed")
+            
+            if successful_serves > 0:
+                self.log_test("Image Serving with Actual Files", True, 
+                            f"Successfully served {successful_serves}/{len(test_files)} test files")
+                return True
+            else:
+                self.log_test("Image Serving with Actual Files", False, 
+                            f"Failed to serve any test files ({failed_serves}/{len(test_files)} failed)")
+                return False
+                
+        except Exception as e:
+            self.log_test("Image Serving with Actual Files", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_new_upload_persistent_storage(self):
+        """Test new upload process to verify it saves to persistent storage"""
+        try:
+            print(f"\n📤 NEW UPLOAD PERSISTENT STORAGE TEST:")
+            
+            # Create a simple test image file in memory
+            import io
+            
+            # Create a minimal PNG file
+            png_header = b'\x89PNG\r\n\x1a\n\rIHDR\x01\x01\x08\x02\x90wS\xde\tpHYs\x0b\x13\x0b\x13\x01\x9a\x9c\x18\nIDATx\x9cc\xf8\x01\x01IEND\xaeB`\x82'
+            img_bytes = io.BytesIO(png_header)
+            
+            # Prepare multipart form data
+            files = {'file': ('persistent_storage_test.png', img_bytes, 'image/png')}
+            
+            # Make request using requests directly for file upload
+            url = f"{BACKEND_URL}/admin/upload-image"
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            print(f"   Upload URL: {url}")
+            print(f"   Expected storage: /app/backend/uploads/ (persistent)")
+            print(f"   Previous storage: /tmp/uploads (ephemeral)")
+            
+            response = self.session.post(url, files=files, headers=headers)
+            
+            print(f"   Upload response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                image_url = data.get("image_url", "")
+                
+                print(f"   Returned image URL: {image_url}")
+                
+                # Check if URL has correct format
+                if image_url.startswith("/api/uploads/"):
+                    print(f"   ✅ URL format correct: /api/uploads/ prefix present")
+                    
+                    # Test if the uploaded image can be served immediately
+                    serve_url = image_url.replace("/api", "")  # Remove /api prefix for serving
+                    serve_response = self.make_request("GET", serve_url)
+                    
+                    print(f"   Serving URL: {BACKEND_URL}{serve_url}")
+                    print(f"   Serving response status: {serve_response.status_code}")
+                    
+                    if serve_response.status_code == 200:
+                        print(f"   ✅ Image immediately accessible after upload")
+                        
+                        # Extract filename for verification
+                        filename = image_url.split('/api/uploads/')[-1]
+                        print(f"   Generated filename: {filename}")
+                        print(f"   Expected location: /app/backend/uploads/{filename}")
+                        
+                        self.log_test("New Upload Persistent Storage", True, 
+                                    f"Upload successful, image URL: {image_url}, immediately accessible")
+                        return True
+                    else:
+                        self.log_test("New Upload Persistent Storage", False, 
+                                    f"Upload successful but image not immediately accessible: status {serve_response.status_code}")
+                        return False
+                else:
+                    self.log_test("New Upload Persistent Storage", False, 
+                                f"Upload successful but incorrect URL format: {image_url}")
+                    return False
+            else:
+                error_text = response.text if hasattr(response, 'text') else str(response.content)
+                print(f"   Upload error: {error_text}")
+                self.log_test("New Upload Persistent Storage", False, 
+                            f"Upload failed with status {response.status_code}: {error_text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("New Upload Persistent Storage", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def run_persistent_storage_tests(self):
+        """Run persistent storage migration tests"""
+        print("=" * 80)
+        print("PERSISTENT STORAGE MIGRATION TESTING")
+        print("Verifying migration from /tmp/uploads to /app/backend/uploads")
+        print("=" * 80)
+        
+        # Test 1: Initialize sample data
+        self.test_init_sample_data()
+        
+        # Test 2: Admin authentication
+        if not self.test_admin_authentication():
+            print("❌ Cannot proceed without authentication")
+            return False
+        
+        # Test 3: Run persistent storage migration tests
+        self.test_persistent_storage_migration()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("PERSISTENT STORAGE MIGRATION SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for result in self.test_results if result["success"])
+        total = len(self.test_results)
+        
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {total - passed}")
+        
+        # Show storage-related test results
+        storage_tests = [
+            "Machine Image Database Check", "Part Image Database Check", 
+            "Image Serving with Actual Files", "New Upload Persistent Storage"
+        ]
+        
+        print(f"\n💾 STORAGE-RELATED TEST RESULTS:")
+        for result in self.test_results:
+            if any(storage_test in result["test"] for storage_test in storage_tests):
+                status = "✅" if result["success"] else "❌"
+                print(f"  {status} {result['test']}: {result['message']}")
+        
+        if total - passed > 0:
+            print("\nFAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"  ❌ {result['test']}: {result['message']}")
+        else:
+            print("\n✅ All persistent storage migration tests completed!")
+        
+        return passed == total
+
     def run_all_tests(self):
         """Run all backend tests focusing on admin section fixes"""
         print("=" * 80)
