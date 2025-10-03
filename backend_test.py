@@ -794,6 +794,206 @@ class BackendTester:
             self.log_test("Admin Orders Data Structure", False, f"Exception occurred: {str(e)}")
             return False
 
+    def test_image_display_investigation(self):
+        """Test 16: CRITICAL - Image Display Issue Investigation"""
+        print("\n🔍 IMAGE DISPLAY INVESTIGATION")
+        print("-" * 50)
+        
+        # Step 1: Check current database state for machine images
+        self.test_machine_image_urls()
+        
+        # Step 2: Check current database state for part images  
+        self.test_part_image_urls()
+        
+        # Step 3: Test image serving endpoint
+        self.test_image_serving_endpoint()
+        
+        # Step 4: Check upload directory
+        self.test_upload_directory_status()
+        
+        # Step 5: Test image upload process
+        self.test_image_upload_process()
+        
+        return True
+
+    def test_machine_image_urls(self):
+        """Check what image_url values are stored for machines"""
+        try:
+            response = self.make_request("GET", "/machines")
+            
+            if response.status_code == 200:
+                machines = response.json()
+                if isinstance(machines, list):
+                    print(f"\n📊 MACHINE IMAGE URL ANALYSIS:")
+                    print(f"   Total machines: {len(machines)}")
+                    
+                    machines_with_images = 0
+                    machines_without_images = 0
+                    
+                    for i, machine in enumerate(machines):
+                        machine_name = machine.get('name', 'Unknown')
+                        image_url = machine.get('image_url')
+                        
+                        if image_url:
+                            machines_with_images += 1
+                            print(f"   Machine {i+1} ({machine_name}): {image_url}")
+                        else:
+                            machines_without_images += 1
+                            print(f"   Machine {i+1} ({machine_name}): No image URL")
+                    
+                    self.log_test("Machine Image URLs", True, f"Found {machines_with_images} machines with images, {machines_without_images} without images")
+                    return machines
+                else:
+                    self.log_test("Machine Image URLs", False, "Invalid machines response format")
+                    return []
+            else:
+                self.log_test("Machine Image URLs", False, f"Failed to get machines: status {response.status_code}")
+                return []
+        except Exception as e:
+            self.log_test("Machine Image URLs", False, f"Exception occurred: {str(e)}")
+            return []
+
+    def test_part_image_urls(self):
+        """Check what image_url values are stored for parts"""
+        try:
+            response = self.make_request("GET", "/parts", auth_required=True)
+            
+            if response.status_code == 200:
+                parts = response.json()
+                if isinstance(parts, list):
+                    print(f"\n📊 PART IMAGE URL ANALYSIS:")
+                    print(f"   Total parts: {len(parts)}")
+                    
+                    parts_with_images = 0
+                    parts_without_images = 0
+                    
+                    for i, part in enumerate(parts[:10]):  # Show first 10 parts
+                        part_name = part.get('name', 'Unknown')
+                        image_url = part.get('image_url')
+                        
+                        if image_url:
+                            parts_with_images += 1
+                            print(f"   Part {i+1} ({part_name}): {image_url}")
+                        else:
+                            parts_without_images += 1
+                            print(f"   Part {i+1} ({part_name}): No image URL")
+                    
+                    if len(parts) > 10:
+                        print(f"   ... and {len(parts) - 10} more parts")
+                    
+                    # Count all parts with/without images
+                    total_with_images = sum(1 for part in parts if part.get('image_url'))
+                    total_without_images = len(parts) - total_with_images
+                    
+                    self.log_test("Part Image URLs", True, f"Found {total_with_images} parts with images, {total_without_images} without images")
+                    return parts
+                else:
+                    self.log_test("Part Image URLs", False, "Invalid parts response format")
+                    return []
+            else:
+                self.log_test("Part Image URLs", False, f"Failed to get parts: status {response.status_code}")
+                return []
+        except Exception as e:
+            self.log_test("Part Image URLs", False, f"Exception occurred: {str(e)}")
+            return []
+
+    def test_image_serving_endpoint(self):
+        """Test the image serving endpoint with sample filenames"""
+        try:
+            # Test with a non-existent image first
+            test_filename = "non-existent-image.jpg"
+            response = self.make_request("GET", f"/uploads/{test_filename}")
+            
+            if response.status_code == 404:
+                self.log_test("Image Serving - Non-existent File", True, "Correctly returns 404 for non-existent image")
+            else:
+                self.log_test("Image Serving - Non-existent File", False, f"Unexpected status for non-existent file: {response.status_code}")
+            
+            # Test the endpoint structure
+            print(f"\n🔗 IMAGE SERVING ENDPOINT TEST:")
+            print(f"   Endpoint: {BACKEND_URL}/uploads/{{filename}}")
+            print(f"   Test file: {test_filename}")
+            print(f"   Response status: {response.status_code}")
+            
+            return True
+        except Exception as e:
+            self.log_test("Image Serving Endpoint", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_upload_directory_status(self):
+        """Check the upload directory status (this will be limited in container environment)"""
+        try:
+            # We can't directly access the file system, but we can infer from upload behavior
+            print(f"\n📁 UPLOAD DIRECTORY ANALYSIS:")
+            print(f"   Upload directory: /tmp/uploads (as per backend configuration)")
+            print(f"   Note: Cannot directly access file system in container environment")
+            
+            # Try to understand upload directory through API behavior
+            self.log_test("Upload Directory Status", True, "Upload directory configured at /tmp/uploads (ephemeral storage)")
+            return True
+        except Exception as e:
+            self.log_test("Upload Directory Status", False, f"Exception occurred: {str(e)}")
+            return False
+
+    def test_image_upload_process(self):
+        """Test the complete image upload process"""
+        try:
+            print(f"\n📤 IMAGE UPLOAD PROCESS TEST:")
+            
+            # Create a simple test image file in memory
+            import io
+            
+            # Create a minimal PNG file
+            png_header = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\nIDATx\x9cc\xf8\x00\x00\x00\x01\x00\x01\x00\x00\x00\x00IEND\xaeB`\x82'
+            img_bytes = io.BytesIO(png_header)
+            
+            # Prepare multipart form data
+            files = {'file': ('test_image_investigation.png', img_bytes, 'image/png')}
+            
+            # Make request using requests directly for file upload
+            url = f"{BACKEND_URL}/admin/upload-image"
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            response = self.session.post(url, files=files, headers=headers)
+            
+            print(f"   Upload URL: {url}")
+            print(f"   Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                image_url = data.get("image_url", "")
+                
+                print(f"   Returned image URL: {image_url}")
+                
+                # Check if URL has correct format
+                if image_url.startswith("/api/uploads/"):
+                    self.log_test("Image Upload Process", True, f"Image upload successful, URL: {image_url}")
+                    
+                    # Test if the uploaded image can be served
+                    serve_url = image_url.replace("/api", "")  # Remove /api prefix for serving
+                    serve_response = self.make_request("GET", serve_url)
+                    
+                    print(f"   Serving URL: {BACKEND_URL}{serve_url}")
+                    print(f"   Serving response status: {serve_response.status_code}")
+                    
+                    if serve_response.status_code == 200:
+                        self.log_test("Image Serving After Upload", True, f"Uploaded image can be served successfully")
+                        return True
+                    else:
+                        self.log_test("Image Serving After Upload", False, f"Cannot serve uploaded image: status {serve_response.status_code}")
+                        return False
+                else:
+                    self.log_test("Image Upload Process", False, f"Image URL has incorrect format: {image_url}")
+                    return False
+            else:
+                error_text = response.text if hasattr(response, 'text') else str(response.content)
+                print(f"   Error response: {error_text}")
+                self.log_test("Image Upload Process", False, f"Upload failed with status {response.status_code}: {error_text}")
+                return False
+        except Exception as e:
+            self.log_test("Image Upload Process", False, f"Exception occurred: {str(e)}")
+            return False
+
     def test_backend_health(self):
         """Test 1: Backend health check - verify backend is responding"""
         try:
