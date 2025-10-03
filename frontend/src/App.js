@@ -232,7 +232,7 @@ const ContactPage = () => {
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-const API = BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 console.log('🔍 API URL configured as:', API);
 
