@@ -117,6 +117,18 @@ backend:
         agent: "testing"
         comment: "MACHINE LOADING DEBUG COMPLETE: ✅ ALL 10 TESTS PASSED! ✅ Backend health verified - responding correctly via machines endpoint. ✅ Sample data initialization working (POST /api/admin/init-sample-data). ✅ Machines endpoint working perfectly (GET /api/machines) - retrieved 4 machines: Pellet Mill 560, Pellet Machine 780, Turbo Hammer Mill, Hammer Mill G3600. ✅ All machines have complete data structure with id, name, description, image_url, created_at fields. ✅ Machine data integrity verified - all 4 machines properly stored with valid data types. ✅ Machine-parts relationship working perfectly - found 23 parts across all 4 machines with valid machine_ids arrays. ✅ Parts endpoint working (GET /api/machines/{id}/parts) for all machines. The backend is fully operational for machine loading functionality."
 
+  - task: "Image Display Issue Investigation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "IMAGE DISPLAY ISSUE ROOT CAUSE IDENTIFIED: ❌ CRITICAL ISSUE FOUND - Images not displaying due to multiple problems: 1) EPHEMERAL STORAGE: Upload directory /tmp/uploads is cleared on container restart, causing historical images to be lost. 2) INCONSISTENT URL FORMAT: Machine images have correct /api/uploads/ prefix but files don't exist (404 errors). Part images have incorrect /uploads/ prefix (missing /api). 3) MISSING FILES: All historical machine images return 404, only 1 part image accessible but with wrong URL format. ✅ NEW UPLOADS WORK: Image upload process works correctly and returns proper /api/uploads/ URLs. ✅ IMAGE SERVING WORKS: Newly uploaded images can be served successfully. IMPACT: Machine images NOT DISPLAYING (files missing), Part images NOT DISPLAYING (wrong URL format + files missing). SOLUTION NEEDED: Fix URL format inconsistency, re-upload missing images, implement persistent storage solution."
+
   - task: "Admin Orders Data Structure for PDF Generation"
     implemented: true
     working: true
