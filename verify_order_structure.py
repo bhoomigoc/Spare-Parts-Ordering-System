@@ -6,7 +6,7 @@ Verify the exact order structure from the review request
 import requests
 import json
 
-BACKEND_URL = "https://parts-order-system.preview.emergentagent.com/api"
+BACKEND_URL = "https://spareparts-order.preview.emergentagent.com/api"
 
 def test_exact_order_structure():
     """Test the exact order structure from the review request"""

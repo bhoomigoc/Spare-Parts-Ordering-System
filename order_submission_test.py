@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Backend URL from environment
-BACKEND_URL = "https://parts-order-system.preview.emergentagent.com/api"
+BACKEND_URL = "https://spareparts-order.preview.emergentagent.com/api"
 
 class OrderSubmissionTester:
     def __init__(self):
