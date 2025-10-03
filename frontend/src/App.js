@@ -473,22 +473,27 @@ const CustomerCatalog = () => {
                   <CardContent className="p-3 sm:p-6">
                     <div className="w-full h-20 sm:h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                       {machine.image_url ? (
-                        <img 
-                          src={machine.image_url} 
-                          alt={machine.name} 
-                          className="max-h-full max-w-full object-contain"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                          }}
-                        />
-                      ) : null}
-                      <span 
-                        className="text-gray-400 text-2xl sm:text-4xl" 
-                        style={{ display: machine.image_url ? 'none' : 'block' }}
-                      >
-                        🔧
-                      </span>
+                        <>
+                          <img 
+                            src={machine.image_url} 
+                            alt={machine.name} 
+                            className="max-h-full max-w-full object-contain"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                              if (fallback) fallback.style.display = 'block';
+                            }}
+                          />
+                          <span 
+                            className="fallback-icon text-gray-400 text-2xl sm:text-4xl" 
+                            style={{ display: 'none' }}
+                          >
+                            🔧
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 text-2xl sm:text-4xl">🔧</span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
