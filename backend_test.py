@@ -1222,6 +1222,58 @@ class BackendTester:
         
         return passed == total
 
+    def run_image_investigation(self):
+        """Run focused image display investigation tests"""
+        print("=" * 80)
+        print("IMAGE DISPLAY INVESTIGATION - Backend API Testing")
+        print("Investigating why machine and part images are not showing")
+        print("=" * 80)
+        
+        # Test 1: Initialize sample data
+        self.test_init_sample_data()
+        
+        # Test 2: Admin authentication
+        if not self.test_admin_authentication():
+            print("❌ Cannot proceed without authentication")
+            return False
+        
+        # Test 3: Run comprehensive image investigation
+        self.test_image_display_investigation()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("IMAGE INVESTIGATION SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for result in self.test_results if result["success"])
+        total = len(self.test_results)
+        
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {total - passed}")
+        
+        # Show image-related test results
+        image_tests = [
+            "Machine Image URLs", "Part Image URLs", "Image Serving", 
+            "Upload Directory Status", "Image Upload Process", "Image Serving After Upload"
+        ]
+        
+        print(f"\n🖼️ IMAGE-RELATED TEST RESULTS:")
+        for result in self.test_results:
+            if any(image_test in result["test"] for image_test in image_tests):
+                status = "✅" if result["success"] else "❌"
+                print(f"  {status} {result['test']}: {result['message']}")
+        
+        if total - passed > 0:
+            print("\nFAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"  ❌ {result['test']}: {result['message']}")
+        else:
+            print("\n✅ All image investigation tests completed!")
+        
+        return passed == total
+
     def run_all_tests(self):
         """Run all backend tests focusing on admin section fixes"""
         print("=" * 80)
