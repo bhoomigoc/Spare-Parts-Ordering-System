@@ -257,11 +257,11 @@ backend:
 
   - task: "Image Display Issue - Missing Files"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py /app/frontend/src/App.js"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -269,6 +269,9 @@ backend:
       - working: true
         agent: "main"
         comment: "FALLBACK SYSTEM IMPLEMENTED: ✅ Added error handling for broken images across all display locations (homepage machine cards, parts pages, cart items, admin sections). ✅ When images fail to load (404), fallback to emoji placeholders (🔧 for machines, 🔩 for parts). ✅ Homepage now shows professional fallback icons instead of broken image placeholders. ✅ User experience significantly improved - no more broken image squares."
+      - working: false
+        agent: "testing"
+        comment: "PERSISTENT STORAGE MIGRATED: ✅ Upload directory successfully changed from /tmp/uploads to /app/backend/uploads. ✅ New uploads work correctly and save to persistent directory. ✅ Image serving endpoint works with persistent files. ❌ DATABASE MISMATCH: 3/4 machines have image URLs pointing to non-existent files. Database references old filenames that don't exist in persistent directory. Need to update database image references to match existing files."
 
   - task: "Email notification system"
     implemented: true
