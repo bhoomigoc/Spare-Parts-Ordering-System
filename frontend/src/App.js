@@ -2322,7 +2322,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
                     {part.image_url ? (
                       <>
                         <img 
-                          src={part.image_url} 
+                          src={`${API}${part.image_url}`} 
                           alt={part.name} 
                           className="max-h-full max-w-full object-contain"
                           onError={(e) => {
