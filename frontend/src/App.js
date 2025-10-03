@@ -296,8 +296,8 @@ const CustomerCatalog = () => {
 
   const fetchMachines = async () => {
     try {
-      console.log('🔍 Fetching machines from:', `${API}/api/api/machines`);
-      const response = await axios.get(`${API}/api/api/machines`);
+      console.log('🔍 Fetching machines from:', `${API}/machines`);
+      const response = await axios.get(`${API}/machines`);
       console.log('✅ Machines fetched:', response.data.length, 'machines');
       setMachines(response.data);
     } catch (error) {
@@ -312,7 +312,7 @@ const CustomerCatalog = () => {
 
   const fetchParts = async (machineId) => {
     try {
-      const response = await axios.get(`${API}/api/api/machines/${machineId}/parts`);
+      const response = await axios.get(`${API}/machines/${machineId}/parts`);
       setParts(response.data);
       setSelectedMachine(machines.find(m => m.id === machineId));
     } catch (error) {
