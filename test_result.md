@@ -384,7 +384,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Image Display Issue Investigation"
+    - "Persistent Storage Migration Verification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
