@@ -287,7 +287,7 @@ const CustomerCatalog = () => {
 
   const initializeSampleData = async () => {
     try {
-      const response = await axios.post(`${API}/admin/init-sample-data`);
+      const response = await axios.post(`${API}/api/admin/init-sample-data`);
       console.log('✅ Sample data initialized:', response.data);
     } catch (error) {
       console.log('⚠️ Sample data already exists or error initializing:', error.message);
@@ -296,8 +296,8 @@ const CustomerCatalog = () => {
 
   const fetchMachines = async () => {
     try {
-      console.log('🔍 Fetching machines from:', `${API}/api/machines`);
-      const response = await axios.get(`${API}/api/machines`);
+      console.log('🔍 Fetching machines from:', `${API}/api/api/machines`);
+      const response = await axios.get(`${API}/api/api/machines`);
       console.log('✅ Machines fetched:', response.data.length, 'machines');
       setMachines(response.data);
     } catch (error) {
@@ -312,7 +312,7 @@ const CustomerCatalog = () => {
 
   const fetchParts = async (machineId) => {
     try {
-      const response = await axios.get(`${API}/api/machines/${machineId}/parts`);
+      const response = await axios.get(`${API}/api/api/machines/${machineId}/parts`);
       setParts(response.data);
       setSelectedMachine(machines.find(m => m.id === machineId));
     } catch (error) {
@@ -951,9 +951,9 @@ const CheckoutDialog = ({ cart, showCheckout, setShowCheckout, setCart, calculat
       };
 
       console.log('🚀 Submitting order:', orderData);
-      console.log('📍 API URL:', `${API}/orders`);
+      console.log('📍 API URL:', `${API}/api/orders`);
       
-      const response = await axios.post(`${API}/orders`, orderData, {
+      const response = await axios.post(`${API}/api/orders`, orderData, {
         headers: {
           'Content-Type': 'application/json'
         },
@@ -1352,7 +1352,7 @@ const AdminLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API}/admin/login`, credentials);
+      const response = await axios.post(`${API}/api/admin/login`, credentials);
       localStorage.setItem('adminToken', response.data.access_token);
       navigate('/admin/dashboard');
     } catch (error) {
@@ -1447,7 +1447,7 @@ const AdminDashboard = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await axios.get(`${API}/admin/orders`, {
+      const response = await axios.get(`${API}/api/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrders(response.data);
@@ -1466,8 +1466,8 @@ const AdminDashboard = () => {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [machinesRes, partsRes] = await Promise.all([
-        axios.get(`${API}/machines`),
-        axios.get(`${API}/parts`, { headers })
+        axios.get(`${API}/api/machines`),
+        axios.get(`${API}/api/parts`, { headers })
       ]);
       
       setMachines(machinesRes.data);
@@ -1990,7 +1990,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API}/admin/upload-image`, formData, {
+      const response = await axios.post(`${API}/api/admin/upload-image`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -2025,7 +2025,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const savePriceEdit = async (partId) => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/parts/${partId}/price?price=${parseFloat(newPrice)}`, {}, {
+      await axios.put(`${API}/api/admin/parts/${partId}/price?price=${parseFloat(newPrice)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2047,7 +2047,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const handleAddMachine = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/admin/machines`, newMachine, {
+      await axios.post(`${API}/api/admin/machines`, newMachine, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2064,7 +2064,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
   const handleEditMachine = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/machines/${editingItem.id}`, {
+      await axios.put(`${API}/api/admin/machines/${editingItem.id}`, {
         name: editingItem.name,
         description: editingItem.description,
         image_url: editingItem.image_url
@@ -2089,7 +2089,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`${API}/admin/machines/${id}`, {
+      await axios.delete(`${API}/api/admin/machines/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2120,7 +2120,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post(`${API}/admin/parts`, {
+      await axios.post(`${API}/api/admin/parts`, {
         ...newPart,
         price: parseFloat(newPart.price)
       }, {
@@ -2163,7 +2163,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.put(`${API}/admin/parts/${editingItem.id}`, {
+      await axios.put(`${API}/api/admin/parts/${editingItem.id}`, {
         machine_ids: editingItem.machine_ids,
         name: editingItem.name,
         code: editingItem.code,
@@ -2191,7 +2191,7 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`${API}/admin/parts/${id}`, {
+      await axios.delete(`${API}/api/admin/parts/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -2723,7 +2723,7 @@ const BulkAddParts = () => {
       const token = localStorage.getItem('adminToken');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const machinesRes = await axios.get(`${API}/machines`);
+      const machinesRes = await axios.get(`${API}/api/machines`);
       setMachines(machinesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -2757,7 +2757,7 @@ const BulkAddParts = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API}/admin/upload-image`, formData, {
+      const response = await axios.post(`${API}/api/admin/upload-image`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -2782,7 +2782,7 @@ const BulkAddParts = () => {
           return;
         }
         
-        await axios.post(`${API}/admin/parts`, {
+        await axios.post(`${API}/api/admin/parts`, {
           ...part,
           price: parseFloat(part.price)
         }, {
