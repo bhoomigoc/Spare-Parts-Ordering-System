@@ -708,10 +708,22 @@ const CartPage = () => {
                         {/* Product Image */}
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           {item.image_url ? (
-                            <img src={item.image_url} alt={item.part_name} className="max-h-full max-w-full object-contain" />
-                          ) : (
-                            <span className="text-gray-400 text-2xl">🔩</span>
-                          )}
+                            <img 
+                              src={item.image_url} 
+                              alt={item.part_name} 
+                              className="max-h-full max-w-full object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
+                          <span 
+                            className="text-gray-400 text-2xl" 
+                            style={{ display: item.image_url ? 'none' : 'block' }}
+                          >
+                            🔩
+                          </span>
                         </div>
                         
                         {/* Product Details */}
