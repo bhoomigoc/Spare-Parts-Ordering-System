@@ -98,8 +98,8 @@ api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 JWT_SECRET = os.environ.get('JWT_SECRET', 'spare_parts_secret_key_2024')
 
-# File upload directory (Render uses ephemeral storage)
-UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', '/tmp/uploads'))
+# File upload directory (persistent storage)
+UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', '/app/backend/uploads'))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Email configuration
