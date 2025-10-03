@@ -1386,10 +1386,17 @@ if __name__ == "__main__":
     
     tester = BackendTester()
     
-    # Check if we should run machine loading debug or full tests
-    if len(sys.argv) > 1 and sys.argv[1] == "debug":
-        print("Running Machine Loading Debug Tests...")
-        success = tester.run_machine_loading_debug()
+    # Check command line arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "debug":
+            print("Running Machine Loading Debug Tests...")
+            success = tester.run_machine_loading_debug()
+        elif sys.argv[1] == "images":
+            print("Running Image Display Investigation...")
+            success = tester.run_image_investigation()
+        else:
+            print("Running Full Backend Tests...")
+            success = tester.run_all_tests()
     else:
         print("Running Full Backend Tests...")
         success = tester.run_all_tests()
