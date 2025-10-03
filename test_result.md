@@ -252,6 +252,18 @@ backend:
         agent: "testing"
         comment: "TESTED: ✅ Image upload fix verified - returns correct URLs with /api/uploads/ prefix. ✅ Image serving endpoint working correctly. ✅ File upload and retrieval functionality fully operational."
 
+  - task: "Image Display Issue - Missing Files"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ISSUE IDENTIFIED: ❌ All historical machine and part images not displaying due to ephemeral storage. Files lost on container restart. Upload system works but historical images need re-uploading. Part image URLs fixed to include /api prefix but files still missing (404 errors)."
+
   - task: "Email notification system"
     implemented: true
     working: "NA"
