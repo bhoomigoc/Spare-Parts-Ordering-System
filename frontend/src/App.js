@@ -2197,10 +2197,22 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
               <div key={machine.id} className="border rounded p-4">
                 <div className="w-full h-24 bg-gray-100 rounded mb-3 flex items-center justify-center">
                   {machine.image_url ? (
-                    <img src={machine.image_url} alt={machine.name} className="max-h-full max-w-full object-contain" />
-                  ) : (
-                    <span className="text-gray-400 text-2xl">🔧</span>
-                  )}
+                    <img 
+                      src={machine.image_url} 
+                      alt={machine.name} 
+                      className="max-h-full max-w-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                    />
+                  ) : null}
+                  <span 
+                    className="text-gray-400 text-2xl" 
+                    style={{ display: machine.image_url ? 'none' : 'block' }}
+                  >
+                    🔧
+                  </span>
                 </div>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-grow">
