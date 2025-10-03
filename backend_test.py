@@ -1757,11 +1757,15 @@ if __name__ == "__main__":
         elif sys.argv[1] == "images":
             print("Running Image Display Investigation...")
             success = tester.run_image_investigation()
+        elif sys.argv[1] == "storage":
+            print("Running Persistent Storage Migration Tests...")
+            success = tester.run_persistent_storage_tests()
         else:
             print("Running Full Backend Tests...")
             success = tester.run_all_tests()
     else:
-        print("Running Full Backend Tests...")
-        success = tester.run_all_tests()
+        # Default to persistent storage tests based on the review request
+        print("Running Persistent Storage Migration Tests...")
+        success = tester.run_persistent_storage_tests()
     
     sys.exit(0 if success else 1)
