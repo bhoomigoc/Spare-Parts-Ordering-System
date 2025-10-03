@@ -43,7 +43,7 @@ async def fix_database_images():
         machine_file_mapping = {
             "Pellet Mill 560": "3a487bc7-13ae-4fe6-ac15-485240d954b8.webp",
             "Pellet Machine 780": "7fecf2d0-dadf-44a4-aea2-7dc632da4371.webp", 
-            "Turbo Hammer Mill": "f46ea96c-07a8-4ba2-926b-77dddb8d9842.webp",
+            "Turbo Hammer Mill ": "f46ea96c-07a8-4ba2-926b-77dddb8d9842.webp",
             "Hammer Mill G3600": "f481a63f-e02a-4182-8779-d95afda356a1.webp"
         }
         
