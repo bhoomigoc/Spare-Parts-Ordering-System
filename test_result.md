@@ -285,6 +285,18 @@ backend:
         agent: "testing"
         comment: "TESTED: Email notification system is properly implemented in send_order_notification() function. Code handles SMTP authentication and email composition correctly. Cannot test actual email sending without SMTP credentials (SMTP_USERNAME and SMTP_PASSWORD are empty in .env)."
 
+  - task: "Persistent Storage Migration Verification"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PERSISTENT STORAGE MIGRATION TESTING COMPLETE: ✅ ALL 6 TESTS PASSED! ✅ Upload directory successfully changed from /tmp/uploads to /app/backend/uploads (persistent storage). ✅ New image uploads working perfectly - saves to persistent directory and immediately accessible. ✅ Image serving endpoint working with actual files - successfully served 4/4 test files from persistent directory. ✅ URL format correct for new uploads - returns proper /api/uploads/ prefix. ✅ Found 11 historical files in persistent directory. ❌ DATABASE MISMATCH IDENTIFIED: 3/4 machines have image URLs pointing to files that don't exist in persistent directory (b236082f-1cf7-406a-acbb-1723e99d9588.webp, c0750f79-64d8-4a32-bdf5-3d66e8eb7a92.webp, df87f50f-6855-419f-af11-463c5a3497c2.webp). ✅ 1 part image matches database and serves correctly. CONCLUSION: Persistent storage migration successful for new uploads, but database image references need updating to match existing files in /app/backend/uploads/."
+
   - task: "Customer Section Backend Health Check"
     implemented: true
     working: true
