@@ -720,7 +720,7 @@ const CartPage = () => {
                           {item.image_url ? (
                             <>
                               <img 
-                                src={item.image_url} 
+                                src={`${API}${item.image_url}`} 
                                 alt={item.part_name} 
                                 className="max-h-full max-w-full object-contain"
                                 onError={(e) => {
