@@ -312,7 +312,7 @@ const CustomerCatalog = () => {
 
   const fetchParts = async (machineId) => {
     try {
-      const response = await axios.get(`${API}/machines/${machineId}/parts`);
+      const response = await axios.get(`${API}/api/machines/${machineId}/parts`);
       setParts(response.data);
       setSelectedMachine(machines.find(m => m.id === machineId));
     } catch (error) {
