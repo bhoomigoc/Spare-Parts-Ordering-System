@@ -2300,10 +2300,22 @@ const CatalogTab = ({ machines, parts, fetchCatalogData }) => {
                 <div className="flex space-x-4">
                   <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                     {part.image_url ? (
-                      <img src={part.image_url} alt={part.name} className="max-h-full max-w-full object-contain" />
-                    ) : (
-                      <span className="text-gray-400 text-xl">🔩</span>
-                    )}
+                      <img 
+                        src={part.image_url} 
+                        alt={part.name} 
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <span 
+                      className="text-gray-400 text-xl" 
+                      style={{ display: part.image_url ? 'none' : 'block' }}
+                    >
+                      🔩
+                    </span>
                   </div>
                   <div className="flex-grow">
                     <div className="flex justify-between items-start">
