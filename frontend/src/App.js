@@ -549,22 +549,27 @@ const PartCard = ({ part, onAddToCart }) => {
       <CardContent className="p-3 sm:p-6">
         <div className="w-full h-20 sm:h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
           {part.image_url ? (
-            <img 
-              src={part.image_url} 
-              alt={part.name} 
-              className="max-h-full max-w-full object-contain"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
-              }}
-            />
-          ) : null}
-          <span 
-            className="text-gray-400 text-xl sm:text-3xl" 
-            style={{ display: part.image_url ? 'none' : 'block' }}
-          >
-            🔩
-          </span>
+            <>
+              <img 
+                src={part.image_url} 
+                alt={part.name} 
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                  if (fallback) fallback.style.display = 'block';
+                }}
+              />
+              <span 
+                className="fallback-icon text-gray-400 text-xl sm:text-3xl" 
+                style={{ display: 'none' }}
+              >
+                🔩
+              </span>
+            </>
+          ) : (
+            <span className="text-gray-400 text-xl sm:text-3xl">🔩</span>
+          )}
         </div>
         <p className="text-xs sm:text-sm text-gray-600 mb-3">{part.description}</p>
         <div className="flex items-center justify-center mb-4">
