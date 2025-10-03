@@ -272,6 +272,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "PERSISTENT STORAGE MIGRATED: ✅ Upload directory successfully changed from /tmp/uploads to /app/backend/uploads. ✅ New uploads work correctly and save to persistent directory. ✅ Image serving endpoint works with persistent files. ❌ DATABASE MISMATCH: 3/4 machines have image URLs pointing to non-existent files. Database references old filenames that don't exist in persistent directory. Need to update database image references to match existing files."
+      - working: true
+        agent: "main"
+        comment: "STORAGE AND DATABASE FIXED: ✅ Changed upload directory to persistent storage (/app/backend/uploads). ✅ Fixed database image references to match existing files. ✅ Image serving endpoint working correctly (tested with curl). ✅ Fallback system working - showing emoji placeholders when production images unavailable. NOTE: Frontend points to production URL, so fallbacks are expected in development. For production deployment, images need to be re-uploaded or storage configured properly."
 
   - task: "Email notification system"
     implemented: true
